@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Sussex Summer Day Camp — Check-In</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --green-dark: #2D6A1F;
+    --green-mid: #3B8A28;
+    --green-light: #EAF5E4;
+    --green-border: #A8D98E;
+    --red-dark: #9B2020;
+    --red-mid: #C0392B;
+    --red-light: #FDECEA;
+    --red-border: #F0A8A0;
+    --amber: #BA7517;
+    --amber-light: #FEF3DC;
+    --amber-border: #F5C96A;
+    --sky: #1A6FA8;
+    --sky-light: #E8F4FC;
+    --text: #1C2B1A;
+    --text-muted: #5A6E56;
+    --bg: #F5FAF3;
+    --surface: #FFFFFF;
+    --border: #D4E8CC;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .page-header {
+    background: var(--green-dark);
+    padding: 20px 24px 18px;
+    text-align: center;
+  }
+
+  .camp-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #FFFFFF;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .camp-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .kiosk {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .welcome {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .welcome h2 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .welcome p {
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+
+  .big-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+
+  .big-btn {
+    padding: 20px 16px;
+    border-radius: var(--radius);
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-muted);
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .big-btn-sub {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Nunito Sans', sans-serif;
+    margin-top: 4px;
+    opacity: 0.8;
+  }
+
+  .big-btn.active-in {
+    background: var(--green-light);
+    border-color: var(--green-mid);
+    color: var(--green-dark);
+  }
+
+  .big-btn.active-out {
+    background: var(--red-light);
+    border-color: var(--red-mid);
+    color: var(--red-dark);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .field-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  select, input {
+    width: 100%;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 17px;
+    padding: 14px 16px;
+    height: auto;
+    margin-bottom: 1.25rem;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  select:focus, input:focus {
+    border-color: var(--green-mid);
+  }
+
+  textarea {
+    width: 100%;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    height: 80px;
+    resize: none;
+    margin-bottom: 1.25rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  textarea:focus { border-color: var(--green-mid); }
+
+  .sos-box {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    transition: all 0.2s;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .sos-box.active {
+    border-color: var(--amber-border);
+    background: var(--amber-light);
+  }
+
+  .sos-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .sos-toggle-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .sos-toggle-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .toggle-track {
+    width: 52px;
+    height: 30px;
+    border-radius: 999px;
+    background: var(--border);
+    border: 1.5px solid var(--border);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+
+  .toggle-track.on { background: var(--amber); border-color: var(--amber); }
+
+  .toggle-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .toggle-track.on .toggle-thumb { left: 26px; }
+
+  .submit-btn {
+    width: 100%;
+    padding: 18px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    color: white;
+    letter-spacing: 0.2px;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .submit-btn-in { background: var(--green-dark); }
+  .submit-btn-out { background: var(--red-dark); }
+  .submit-btn:active { opacity: 0.85; transform: scale(0.99); }
+
+  .status-note {
+    font-size: 15px;
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 1.25rem;
+    font-weight: 600;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .status-ok { background: var(--green-light); color: var(--green-dark); border: 1.5px solid var(--green-border); }
+  .status-warn { background: var(--red-light); color: var(--red-dark); border: 1.5px solid var(--red-border); }
+  .status-neutral { background: var(--bg); color: var(--text-muted); border: 1.5px solid var(--border); }
+
+  .success-screen {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+  }
+
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+  }
+
+  .success-icon-in { background: var(--green-light); }
+  .success-icon-out { background: var(--red-light); }
+
+  .success-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .success-detail {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .success-sos {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber);
+    background: var(--amber-light);
+    border: 1.5px solid var(--amber-border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: inline-block;
+    margin-bottom: 1.5rem;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .done-btn {
+    padding: 16px 48px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .done-btn:active { background: var(--bg); }
+
+  .admin-toggle {
+    text-align: center;
+    margin-top: 1.25rem;
+  }
+
+  .admin-link {
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    text-decoration: underline;
+    font-family: 'Nunito Sans', sans-serif;
+  }
+
+  .admin-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .admin-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .save-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green-mid);
+    margin-right: 6px;
+  }
+
+  .admin-tab-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+  }
+
+  .admin-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    font-size: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .admin-tab.active {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .admin-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Nunito', sans-serif;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    color: var(--text);
+    margin-right: 6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .admin-btn:active { background: var(--bg); }
+  .admin-btn-danger { color: var(--red-dark); border-color: var(--red-border); }
+
+  .admin-textarea {
+    width: 100%;
+    font-size: 13px;
+    font-family: 'Nunito Sans', sans-serif;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    height: 80px;
+    resize: none;
+    margin-bottom: 8px;
+    outline: none;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .stat {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 10px 6px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+
+  .stat-num {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 600;
+  }
+
+  .log-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .log-table th { text-align: left; padding: 7px 8px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+  .log-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  .log-table tr:last-child td { border-bottom: none; }
+
+  .sos-card {
+    background: var(--amber-light);
+    border: 2px solid var(--amber-border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+
+  .sos-card-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .sos-card-time { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+
+  .badge-in { background: var(--green-light); color: var(--green-dark); }
+  .badge-out { background: var(--red-light); color: var(--red-dark); }
+  .badge-sos { background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-border); }
+  .badge-waiting { background: var(--amber-light); color: var(--amber); }
+
+  .row-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+
+  .row-item:last-child { border-bottom: none; }
+
+  .row-name { font-size: 14px; font-weight: 600; font-family: 'Nunito', sans-serif; flex: 1; color: var(--text); }
+  .row-name-muted { font-size: 14px; flex: 1; color: var(--text-muted); }
+  .row-time { font-size: 12px; color: var(--text-muted); }
+
+  .empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 2rem 1rem;
+  }
+
+  .roster-entry {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    gap: 8px;
+  }
+
+  .roster-entry:last-child { border-bottom: none; }
+
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .del-btn:hover { color: var(--red-mid); }
+
+  .section-label {
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+    margin-top: 4px;
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 480px) {
+    .camp-name { font-size: 19px; }
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .big-btn { font-size: 17px; padding: 18px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="camp-name">Sussex Summer Day Camp</div>
+  <div class="camp-sub">Camper Check-In &amp; Check-Out</div>
+</div>
+
+<div class="kiosk">
+
+  <div id="view-main">
+    <div class="welcome">
+      <h2>Welcome!</h2>
+      <p>Please check your camper in or out below.</p>
+    </div>
+
+    <div class="big-toggle">
+      <div class="big-btn active-in" id="btn-in" onclick="setMode('in')">
+        Check-In
+        <div class="big-btn-sub">Dropping off</div>
+      </div>
+      <div class="big-btn" id="btn-out" onclick="setMode('out')">
+        Check-Out
+        <div class="big-btn-sub">Picking up</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="field-label">Select your camper</span>
+      <select id="camper-select"><option value="">— Tap to select —</option></select>
+
+      <div id="checkin-fields">
+        <span class="field-label">Your full name</span>
+        <input type="text" id="dropoff-name" placeholder="e.g. Sandra Jones" autocomplete="name" />
+        <span class="field-label">Your relationship to camper</span>
+        <select id="dropoff-rel">
+          <option value="">— Select —</option>
+          <option>Parent / Guardian</option>
+          <option>Grandparent</option>
+          <option>Sibling (18+)</option>
+          <option>Aunt / Uncle</option>
+          <option>Family friend</option>
+          <option>Other</option>
+        </select>
+        <span class="field-label">Notes <span style="font-size:12px;font-weight:400;">(optional)</span></span>
+        <textarea id="checkin-notes" placeholder="e.g. early pickup, medical note..."></textarea>
+        <div class="sos-box" id="sos-box" onclick="toggleSOS()">
+          <div class="sos-toggle-row">
+            <div>
+              <div class="sos-toggle-label">SOS lunch needed?</div>
+              <div class="sos-toggle-sub">Tap to request a camp-provided lunch</div>
+            </div>
+            <div class="toggle-track" id="sos-track">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="checkout-fields" class="hidden">
+        <div class="status-note status-neutral" id="checkout-status-note">Select a camper above.</div>
+        <span class="field-label">Your full name <span style="font-size:12px;font-weight:400;">(as it appears on your ID)</span></span>
+        <input type="text" id="pickup-name" placeholder="e.g. Robert Smith" autocomplete="name" />
+        <span class="field-label">Your relationship to camper</span>
+        <select id="pickup-rel">
+          <option value="">— Select —</option>
+          <option>Parent / Guardian</option>
+          <option>Grandparent</option>
+          <option>Sibling (18+)</option>
+          <option>Aunt / Uncle</option>
+          <option>Family friend</option>
+          <option>Other authorized</option>
+        </select>
+      </div>
+
+      <button class="submit-btn submit-btn-in" id="submit-btn" onclick="submitEntry()">Log check-in</button>
+    </div>
+
+    <div class="admin-toggle">
+      <button class="admin-link" onclick="toggleAdmin()">Staff admin panel</button>
+    </div>
+
+    <div id="admin-panel" class="admin-panel hidden">
+      <div class="admin-header">
+        <div class="admin-title"><span class="save-dot"></span>Staff admin</div>
+        <span id="save-indicator" style="font-size:11px;color:var(--text-muted);">Loading...</span>
+      </div>
+      <div class="admin-tab-bar">
+        <button class="admin-tab active" onclick="showAdminTab('roster')">Roster</button>
+        <button class="admin-tab" onclick="showAdminTab('lunch')">SOS Lunch</button>
+        <button class="admin-tab" onclick="showAdminTab('stillhere')">Still Here</button>
+        <button class="admin-tab" onclick="showAdminTab('log')">Log</button>
+      </div>
+
+      <div id="admin-roster">
+        <div class="section-label">Add campers (one per line)</div>
+        <textarea class="admin-textarea" id="roster-paste" placeholder="Smith, Jake&#10;Jones, Mia&#10;Brown, Liam"></textarea>
+        <div style="margin-bottom:10px;">
+          <button class="admin-btn" onclick="loadRoster()">Load roster</button>
+          <button class="admin-btn admin-btn-danger" onclick="clearRoster()">Clear all</button>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;" id="roster-count">0 campers loaded</div>
+        <div id="roster-list"></div>
+      </div>
+
+      <div id="admin-lunch" class="hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:15px;font-weight:700;font-family:'Nunito',sans-serif;color:var(--text)" id="sos-count-label">0 SOS lunches requested</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Updates as campers check in</div>
+          </div>
+          <button class="admin-btn" onclick="exportLunchCSV()">Export</button>
+        </div>
+        <div id="sos-list"><div class="empty">No SOS lunch requests yet.</div></div>
+      </div>
+
+      <div id="admin-stillhere" class="hidden">
+        <div class="stats-row">
+          <div class="stat"><div class="stat-num" id="sh-roster">0</div><div class="stat-label">On roster</div></div>
+          <div class="stat"><div class="stat-num" id="sh-here" style="color:var(--green-dark)">0</div><div class="stat-label">Still here</div></div>
+          <div class="stat"><div class="stat-num" id="sh-out" style="color:var(--red-dark)">0</div><div class="stat-label">Gone home</div></div>
+          <div class="stat"><div class="stat-num" id="sh-notarrived" style="color:var(--amber)">0</div><div class="stat-label">Not arrived</div></div>
+        </div>
+        <div class="section-label">Still here</div>
+        <div id="stillhere-list"><div class="empty">No campers checked in yet.</div></div>
+        <div class="section-label" style="margin-top:14px;">Not yet arrived</div>
+        <div id="notarrived-list"><div class="empty">All rostered campers have arrived.</div></div>
+      </div>
+
+      <div id="admin-log" class="hidden">
+        <div class="stats-row">
+          <div class="stat"><div class="stat-num" id="log-checkins" style="color:var(--green-dark)">0</div><div class="stat-label">Check-ins</div></div>
+          <div class="stat"><div class="stat-num" id="log-checkouts" style="color:var(--red-dark)">0</div><div class="stat-label">Check-outs</div></div>
+          <div class="stat"><div class="stat-num" id="log-here">0</div><div class="stat-label">Still here</div></div>
+          <div class="stat"><div class="stat-num" id="log-sos" style="color:var(--amber)">0</div><div class="stat-label">SOS lunches</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button class="admin-btn" onclick="exportCSV()">Export CSV</button>
+          <button class="admin-btn admin-btn-danger" onclick="clearLog()">Clear log</button>
+        </div>
+        <div id="log-container"><div class="empty">No entries yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-success" class="hidden">
+    <div class="success-screen">
+      <div class="success-icon" id="success-icon">
+        <span style="font-size:36px;line-height:1;">✓</span>
+      </div>
+      <div class="success-name" id="success-name"></div>
+      <div class="success-detail" id="success-detail"></div>
+      <div class="success-sos hidden" id="success-sos">SOS lunch requested</div>
+      <br />
+      <button class="done-btn" onclick="resetForm()">Done</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let campers = [];
+  let log = [];
+  let currentMode = 'in';
+  let adminTab = 'roster';
+  let adminOpen = false;
+  let sosOn = false;
+
+  const STORAGE_KEY_CAMPERS = 'ssdc-campers';
+  const STORAGE_KEY_LOG = 'ssdc-log';
+
+  function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY_CAMPERS, JSON.stringify(campers));
+      localStorage.setItem(STORAGE_KEY_LOG, JSON.stringify(log));
+      const now = new Date();
+      const el = document.getElementById('save-indicator');
+      if (el) el.textContent = 'Saved ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    } catch(e) {}
+  }
+
+  function loadData() {
+    try {
+      const c = localStorage.getItem(STORAGE_KEY_CAMPERS);
+      const l = localStorage.getItem(STORAGE_KEY_LOG);
+      if (c) campers = JSON.parse(c);
+      if (l) log = JSON.parse(l);
+      refreshCamperSelect();
+      renderRosterList();
+      const el = document.getElementById('save-indicator');
+      if (el) el.textContent = campers.length ? 'Data restored' : 'No saved data';
+    } catch(e) {}
+  }
+
+  function getLastName(name) {
+    if (name.includes(',')) return name.split(',')[0].trim().toLowerCase();
+    const parts = name.trim().split(/\s+/);
+    return parts[parts.length - 1].toLowerCase();
+  }
+
+  function sortCampers(arr) {
+    return [...arr].sort((a, b) => getLastName(a).localeCompare(getLastName(b)));
+  }
+
+  function toggleSOS() {
+    sosOn = !sosOn;
+    document.getElementById('sos-track').classList.toggle('on', sosOn);
+    document.getElementById('sos-box').classList.toggle('active', sosOn);
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('checkin-fields').classList.toggle('hidden', mode !== 'in');
+    document.getElementById('checkout-fields').classList.toggle('hidden', mode !== 'out');
+    document.getElementById('btn-in').className = 'big-btn' + (mode === 'in' ? ' active-in' : '');
+    document.getElementById('btn-out').className = 'big-btn' + (mode === 'out' ? ' active-out' : '');
+    document.getElementById('submit-btn').textContent = mode === 'in' ? 'Log check-in' : 'Log check-out';
+    document.getElementById('submit-btn').className = 'submit-btn ' + (mode === 'in' ? 'submit-btn-in' : 'submit-btn-out');
+    updateCheckoutNote();
+  }
+
+  function updateCheckoutNote() {
+    if (currentMode !== 'out') return;
+    const camper = document.getElementById('camper-select').value;
+    const note = document.getElementById('checkout-status-note');
+    if (!camper) { note.className = 'status-note status-neutral'; note.textContent = 'Select a camper above.'; return; }
+    const lastIn = [...log].reverse().find(e => e.camper === camper && e.type === 'in');
+    const lastOut = [...log].reverse().find(e => e.camper === camper && e.type === 'out');
+    if (!lastIn) { note.className = 'status-note status-warn'; note.textContent = camper + ' has not been checked in today. Please see a staff member.'; }
+    else if (lastOut && lastOut.timestamp > lastIn.timestamp) { note.className = 'status-note status-warn'; note.textContent = camper + ' was already checked out at ' + lastOut.time + '.'; }
+    else { note.className = 'status-note status-ok'; note.textContent = camper + ' is here and ready to go — checked in at ' + lastIn.time + '.'; }
+  }
+
+  document.getElementById('camper-select').addEventListener('change', updateCheckoutNote);
+
+  function submitEntry() {
+    const camper = document.getElementById('camper-select').value;
+    if (!camper) { alert('Please select a camper.'); return; }
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const date = now.toLocaleDateString();
+    const timestamp = now.getTime();
+
+    if (currentMode === 'in') {
+      const person = document.getElementById('dropoff-name').value.trim();
+      const rel = document.getElementById('dropoff-rel').value;
+      const notes = document.getElementById('checkin-notes').value.trim();
+      log.push({ date, time, timestamp, type:'in', camper, person, rel, notes, sos: sosOn });
+      const sosEl = document.getElementById('success-sos');
+      sosOn ? sosEl.classList.remove('hidden') : sosEl.classList.add('hidden');
+      showSuccess('in', camper, person ? 'Dropped off by ' + person : 'Check-in recorded at ' + time);
+    } else {
+      const person = document.getElementById('pickup-name').value.trim();
+      const rel = document.getElementById('pickup-rel').value;
+      if (!person) { alert('Please enter your name.'); return; }
+      log.push({ date, time, timestamp, type:'out', camper, person, rel, notes:'', sos:false });
+      document.getElementById('success-sos').classList.add('hidden');
+      showSuccess('out', camper, 'Picked up by ' + person + ' at ' + time);
+    }
+    saveData();
+  }
+
+  function showSuccess(type, camper, detail) {
+    document.getElementById('view-main').classList.add('hidden');
+    document.getElementById('view-success').classList.remove('hidden');
+    document.getElementById('success-icon').className = 'success-icon ' + (type === 'in' ? 'success-icon-in' : 'success-icon-out');
+    document.getElementById('success-name').textContent = camper;
+    document.getElementById('success-detail').textContent = detail;
+  }
+
+  function resetForm() {
+    document.getElementById('view-success').classList.add('hidden');
+    document.getElementById('view-main').classList.remove('hidden');
+    document.getElementById('camper-select').value = '';
+    document.getElementById('dropoff-name').value = '';
+    document.getElementById('dropoff-rel').value = '';
+    document.getElementById('pickup-name').value = '';
+    document.getElementById('pickup-rel').value = '';
+    document.getElementById('checkin-notes').value = '';
+    if (sosOn) toggleSOS();
+    updateCheckoutNote();
+  }
+
+  function toggleAdmin() {
+    adminOpen = !adminOpen;
+    document.getElementById('admin-panel').classList.toggle('hidden', !adminOpen);
+    if (adminOpen) showAdminTab(adminTab);
+  }
+
+  function showAdminTab(tab) {
+    adminTab = tab;
+    ['roster','lunch','stillhere','log'].forEach(t => {
+      document.getElementById('admin-' + t).classList.toggle('hidden', t !== tab);
+    });
+    document.querySelectorAll('.admin-tab').forEach((el,i) => {
+      el.classList.toggle('active', ['roster','lunch','stillhere','log'][i] === tab);
+    });
+    if (tab === 'lunch') renderLunch();
+    if (tab === 'stillhere') renderStillHere();
+    if (tab === 'log') renderLog();
+  }
+
+  function getStatusMap() {
+    const map = {};
+    log.forEach(e => { map[e.camper] = { type: e.type, time: e.time }; });
+    return map;
+  }
+
+  function renderLunch() {
+    const sosEntries = log.filter(e => e.type === 'in' && e.sos);
+    document.getElementById('sos-count-label').textContent = sosEntries.length + ' SOS lunch' + (sosEntries.length !== 1 ? 'es' : '') + ' requested';
+    const el = document.getElementById('sos-list');
+    if (!sosEntries.length) { el.innerHTML = '<div class="empty">No SOS lunch requests yet.</div>'; return; }
+    el.innerHTML = sosEntries.map(e =>
+      '<div class="sos-card">' +
+        '<div class="sos-card-name">' + e.camper + '</div>' +
+        '<div class="sos-card-time">Checked in at ' + e.time + (e.person ? ' — dropped off by ' + e.person : '') + '</div>' +
+      '</div>'
+    ).join('');
+  }
+
+  function renderStillHere() {
+    const map = getStatusMap();
+    const stillHere = sortCampers(campers.filter(c => map[c] && map[c].type === 'in'));
+    const notArrived = sortCampers(campers.filter(c => !map[c]));
+    const gone = campers.filter(c => map[c] && map[c].type === 'out');
+    document.getElementById('sh-roster').textContent = campers.length;
+    document.getElementById('sh-here').textContent = stillHere.length;
+    document.getElementById('sh-out').textContent = gone.length;
+    document.getElementById('sh-notarrived').textContent = notArrived.length;
+    const shEl = document.getElementById('stillhere-list');
+    shEl.innerHTML = stillHere.length ? stillHere.map(c => {
+      const sosEntry = log.find(e => e.camper === c && e.type === 'in' && e.sos);
+      return '<div class="row-item"><span class="row-name">' + c + '</span>' + (sosEntry ? '<span class="badge badge-sos">SOS lunch</span>' : '') + '<span class="row-time">In at ' + map[c].time + '</span><span class="badge badge-in">Here</span></div>';
+    }).join('') : '<div class="empty">No campers currently checked in.</div>';
+    const naEl = document.getElementById('notarrived-list');
+    naEl.innerHTML = notArrived.length ? notArrived.map(c =>
+      '<div class="row-item"><span class="row-name-muted">' + c + '</span><span class="badge badge-waiting">Not arrived</span></div>'
+    ).join('') : '<div class="empty">All rostered campers have arrived.</div>';
+  }
+
+  function renderLog() {
+    const map = getStatusMap();
+    const stillHere = campers.filter(c => map[c] && map[c].type === 'in').length;
+    document.getElementById('log-checkins').textContent = log.filter(e => e.type === 'in').length;
+    document.getElementById('log-checkouts').textContent = log.filter(e => e.type === 'out').length;
+    document.getElementById('log-here').textContent = stillHere;
+    document.getElementById('log-sos').textContent = log.filter(e => e.sos).length;
+    const el = document.getElementById('log-container');
+    if (!log.length) { el.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
+    const rows = [...log].reverse().map(e =>
+      '<tr>' +
+        '<td>' + e.time + '</td>' +
+        '<td><span class="badge ' + (e.type==='in'?'badge-in':'badge-out') + '">' + (e.type==='in'?'In':'Out') + '</span>' + (e.sos ? ' <span class="badge badge-sos">SOS</span>' : '') + '</td>' +
+        '<td style="font-weight:600">' + e.camper + '</td>' +
+        '<td>' + (e.person||'—') + (e.rel ? '<br><span style="font-size:10px;color:var(--text-muted)">'+e.rel+'</span>' : '') + '</td>' +
+        '<td style="color:var(--text-muted)">' + (e.notes||'—') + '</td>' +
+      '</tr>'
+    ).join('');
+    el.innerHTML = '<table class="log-table"><thead><tr><th>Time</th><th>Type</th><th>Camper</th><th>Person</th><th>Notes</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function loadRoster() {
+    const text = document.getElementById('roster-paste').value.trim();
+    if (!text) return;
+    const names = text.split('\n').map(n => n.trim()).filter(Boolean);
+    campers = sortCampers([...new Set([...campers, ...names])]);
+    refreshCamperSelect();
+    renderRosterList();
+    document.getElementById('roster-paste').value = '';
+    saveData();
+  }
+
+  function clearRoster() {
+    if (!confirm('Clear the entire roster?')) return;
+    campers = [];
+    refreshCamperSelect();
+    renderRosterList();
+    saveData();
+  }
+
+  function refreshCamperSelect() {
+    const sel = document.getElementById('camper-select');
+    sel.innerHTML = '<option value="">— Tap to select —</option>';
+    campers.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  }
+
+  function renderRosterList() {
+    document.getElementById('roster-count').textContent = campers.length + ' campers loaded';
+    const el = document.getElementById('roster-list');
+    el.innerHTML = campers.length ? campers.map((c,i) =>
+      '<div class="roster-entry"><span style="flex:1">' + c + '</span><button class="del-btn" onclick="removeCamper(' + i + ')">x</button></div>'
+    ).join('') : '';
+  }
+
+  function removeCamper(i) {
+    campers.splice(i,1);
+    refreshCamperSelect();
+    renderRosterList();
+    saveData();
+  }
+
+  function clearLog() {
+    if (!confirm('Clear all log entries?')) return;
+    log = [];
+    saveData();
+    renderLog();
+  }
+
+  function exportCSV() {
+    if (!log.length) return;
+    const headers = ['Date','Time','Type','Camper','Person','Relationship','SOS Lunch','Notes'];
+    const rows = log.map(e => [e.date,e.time,e.type==='in'?'Check-In':'Check-Out',e.camper,e.person||'',e.rel||'',e.sos?'Yes':'No',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([[headers.join(','),...rows].join('\n')],{type:'text/csv'}));
+    a.download = 'ssdc-log-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+  }
+
+  function exportLunchCSV() {
+    const sos = log.filter(e => e.type === 'in' && e.sos);
+    if (!sos.length) return;
+    const headers = ['Camper','Checked In At','Dropped Off By'];
+    const rows = sos.map(e => [e.camper,e.time,e.person||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([[headers.join(','),...rows].join('\n')],{type:'text/csv'}));
+    a.download = 'ssdc-sos-lunch-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+  }
+
+  loadData();
+</script>
+</body>
+</html>
