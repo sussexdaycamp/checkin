@@ -986,8 +986,8 @@
     renderLog();
   }
 
-  function exportCSV() {
-    if (!log.length) return;
+  function exportCSV(silent) {
+    if (!log.length) { if (!silent) alert('No records to export.'); return; }
     const headers = ['Date','Time','Type','Camper','Person','Relationship','SOS Lunch','Notes'];
     const rows = log.map(e => [e.date,e.time,e.type==='in'?'Check-In':'Check-Out',e.camper,e.person||'',e.rel||'',e.sos?'Yes':'No',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
     const a = document.createElement('a');
@@ -1007,7 +1007,82 @@
     a.click();
   }
 
+  // ── Daily reset at 5:30 PM ──────────────────────────────────────────────
+
+  const RESET_HOUR = 17;   // 5 PM
+  const RESET_MIN  = 30;   // :30
+
+  function todayDateString() {
+    return new Date().toLocaleDateString();
+  }
+
+  function checkDailyReset() {
+    const lastReset = localStorage.getItem('ssdc-last-reset');
+    const today = todayDateString();
+    const now = new Date();
+    const isPastResetTime = now.getHours() > RESET_HOUR || (now.getHours() === RESET_HOUR && now.getMinutes() >= RESET_MIN);
+
+    // If we've already reset today at or after 5:30, nothing to do
+    if (lastReset === today + '-done') return;
+
+    // If it's past 5:30 and we haven't reset for today yet, do it now
+    if (isPastResetTime && lastReset !== today + '-done') {
+      triggerEndOfDayReset();
+    }
+  }
+
+  function triggerEndOfDayReset(manual) {
+    if (!log.length && !manual) {
+      // No entries — just mark reset done silently
+      localStorage.setItem('ssdc-last-reset', todayDateString() + '-done');
+      return;
+    }
+
+    // Export CSV first
+    exportCSV(true);
+
+    // Short delay so the download initiates before we wipe
+    setTimeout(function() {
+      log = [];
+      localStorage.setItem('ssdc-log', JSON.stringify(log));
+      localStorage.setItem('ssdc-last-reset', todayDateString() + '-done');
+      // Refresh any open admin views
+      if (adminOpen) {
+        if (adminTab === 'log') renderLog();
+        if (adminTab === 'stillhere') renderStillHere();
+        if (adminTab === 'lunch') renderLunch();
+      }
+      showResetBanner();
+    }, 800);
+  }
+
+  function showResetBanner() {
+    const existing = document.getElementById('reset-banner');
+    if (existing) existing.remove();
+    const banner = document.createElement('div');
+    banner.id = 'reset-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#2D6A1F;color:white;text-align:center;padding:14px 16px;font-family:Nunito,sans-serif;font-size:15px;font-weight:600;z-index:9999;';
+    banner.textContent = "Today's log has been saved and reset for tomorrow. Have a great evening!";
+    document.body.appendChild(banner);
+    setTimeout(function() { banner.remove(); }, 6000);
+  }
+
+  function scheduleNextCheck() {
+    // Check every 30 seconds whether it's time to reset
+    setInterval(function() {
+      const now = new Date();
+      const lastReset = localStorage.getItem('ssdc-last-reset');
+      const today = todayDateString();
+      const isPastResetTime = now.getHours() > RESET_HOUR || (now.getHours() === RESET_HOUR && now.getMinutes() >= RESET_MIN);
+      if (isPastResetTime && lastReset !== today + '-done') {
+        triggerEndOfDayReset();
+      }
+    }, 30000);
+  }
+
   loadData();
+  checkDailyReset();
+  scheduleNextCheck();
 </script>
 </body>
 </html>
