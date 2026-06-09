@@ -17,6 +17,10 @@
     --red-border: #F0A8A0;
     --sky: #1A6FA8;
     --sky-light: #E8F4FC;
+    --sky-border: #90C8ED;
+    --bus: #1A6FA8;
+    --bus-light: #E8F4FC;
+    --bus-border: #90C8ED;
     --text: #1C2B1A;
     --text-muted: #5A6E56;
     --bg: #F5FAF3;
@@ -179,6 +183,102 @@
   }
 
   textarea:focus { border-color: var(--green-mid); }
+
+  .bus-box {
+    border: 3px solid var(--bus-border);
+    border-radius: var(--radius-sm);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    background: var(--bus-light);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.2s;
+  }
+
+  .bus-box.active {
+    background: var(--bus);
+    border-color: var(--bus);
+  }
+
+  .bus-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .bus-toggle-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--bus);
+  }
+
+  .bus-box.active .bus-toggle-label { color: white; }
+
+  .bus-toggle-sub {
+    font-size: 12px;
+    color: var(--bus);
+    margin-top: 3px;
+    font-weight: 600;
+  }
+
+  .bus-box.active .bus-toggle-sub { color: rgba(255,255,255,0.85); }
+
+  .bus-icon {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .bus-toggle-track {
+    width: 52px;
+    height: 30px;
+    border-radius: 999px;
+    background: rgba(26,111,168,0.2);
+    border: 1.5px solid var(--bus-border);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+
+  .bus-box.active .bus-toggle-track {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+  }
+
+  .bus-toggle-track.on { background: white; }
+  .bus-box.active .bus-toggle-track.on { background: white; }
+
+  .bus-toggle-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--bus);
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .bus-toggle-track.on .bus-toggle-thumb { left: 26px; }
+  .bus-box.active .bus-toggle-thumb { background: var(--bus); }
+  .bus-box.active .bus-toggle-track.on .bus-toggle-thumb { background: var(--bus); }
+
+  .badge-bus { background: var(--bus-light); color: var(--bus); border: 1px solid var(--bus-border); }
+
+  .success-bus {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--bus);
+    background: var(--bus-light);
+    border: 1.5px solid var(--bus-border);
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: inline-block;
+    margin-bottom: 1.25rem;
+    font-family: 'Nunito', sans-serif;
+  }
 
   .submit-btn {
     width: 100%;
@@ -526,6 +626,17 @@
         </select>
         <span class="field-label">Notes <span style="font-size:12px;font-weight:400;">(optional)</span></span>
         <textarea id="checkin-notes" placeholder="e.g. early pickup, medical note..."></textarea>
+        <div class="bus-box hidden" id="bus-box" onclick="toggleBus()">
+          <div class="bus-toggle-row">
+            <div>
+              <div class="bus-toggle-label">🚌 Riding the bus to Summer Opportunities?</div>
+              <div class="bus-toggle-sub">Tap to confirm your camper is taking the bus today</div>
+            </div>
+            <div class="bus-toggle-track" id="bus-track">
+              <div class="bus-toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="checkout-fields" class="hidden">
@@ -569,8 +680,22 @@
           <button class="admin-btn" onclick="loadRoster()">Load roster</button>
           <button class="admin-btn admin-btn-danger" onclick="clearRoster()">Clear all</button>
         </div>
-        <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;" id="roster-count">0 campers loaded</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;" id="roster-count">0 campers loaded</div>
         <div id="roster-list"></div>
+
+        <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+          <div class="section-label">Summer Opportunities Bus</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Enable or disable the bus confirmation prompt on the check-in form. Turn on for Weeks 2–4 only.</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
+            <div>
+              <div style="font-size:14px;font-weight:700;font-family:'Nunito',sans-serif;color:var(--text)" id="bus-feature-label">Bus prompt: OFF</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Parents will not see the bus option</div>
+            </div>
+            <div class="bus-toggle-track" id="bus-admin-track" onclick="toggleBusFeature()" style="cursor:pointer;">
+              <div class="bus-toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="admin-stillhere" class="hidden">
@@ -591,6 +716,7 @@
           <div class="stat"><div class="stat-num" id="log-checkins" style="color:var(--green-dark)">0</div><div class="stat-label">Check-ins</div></div>
           <div class="stat"><div class="stat-num" id="log-checkouts" style="color:var(--red-dark)">0</div><div class="stat-label">Check-outs</div></div>
           <div class="stat"><div class="stat-num" id="log-here">0</div><div class="stat-label">Still here</div></div>
+          <div class="stat"><div class="stat-num" id="log-bus" style="color:var(--bus)">0</div><div class="stat-label">On bus</div></div>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:12px;">
           <button class="admin-btn" onclick="exportCSV()">Export CSV</button>
@@ -608,6 +734,7 @@
       </div>
       <div class="success-name" id="success-name"></div>
       <div class="success-detail" id="success-detail"></div>
+      <div class="success-bus hidden" id="success-bus">🚌 Bus to Summer Opportunities confirmed</div>
       <br />
       <button class="done-btn" onclick="resetForm()">Done</button>
     </div>
@@ -621,6 +748,8 @@
   let currentMode = 'in';
   let adminTab = 'roster';
   let adminOpen = false;
+  let busOn = false;
+  let busFeatureOn = false;
 
   const STORAGE_KEY_CAMPERS = 'ssdc-campers';
   const STORAGE_KEY_LOG = 'ssdc-log';
@@ -629,6 +758,7 @@
     try {
       localStorage.setItem(STORAGE_KEY_CAMPERS, JSON.stringify(campers));
       localStorage.setItem(STORAGE_KEY_LOG, JSON.stringify(log));
+      localStorage.setItem('ssdc-bus-feature', JSON.stringify(busFeatureOn));
       const now = new Date();
       const el = document.getElementById('save-indicator');
       if (el) el.textContent = 'Saved ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
@@ -639,10 +769,13 @@
     try {
       const c = localStorage.getItem(STORAGE_KEY_CAMPERS);
       const l = localStorage.getItem(STORAGE_KEY_LOG);
+      const b = localStorage.getItem('ssdc-bus-feature');
       if (c) campers = JSON.parse(c);
       if (l) log = JSON.parse(l);
+      if (b !== null) busFeatureOn = JSON.parse(b);
       refreshCamperSelect();
       renderRosterList();
+      applyBusFeature();
       const el = document.getElementById('save-indicator');
       if (el) el.textContent = campers.length ? 'Data restored' : 'No saved data';
     } catch(e) {}
@@ -656,6 +789,40 @@
 
   function sortCampers(arr) {
     return [...arr].sort((a, b) => getLastName(a).localeCompare(getLastName(b)));
+  }
+
+  function toggleBus() {
+    if (!busFeatureOn) return;
+    busOn = !busOn;
+    const track = document.getElementById('bus-track');
+    const box = document.getElementById('bus-box');
+    track.classList.toggle('on', busOn);
+    box.classList.toggle('active', busOn);
+  }
+
+  function toggleBusFeature() {
+    busFeatureOn = !busFeatureOn;
+    applyBusFeature();
+    saveData();
+  }
+
+  function applyBusFeature() {
+    const box = document.getElementById('bus-box');
+    const adminTrack = document.getElementById('bus-admin-track');
+    const label = document.getElementById('bus-feature-label');
+    const sublabel = adminTrack ? adminTrack.parentElement.querySelector('div:last-child') : null;
+    if (busFeatureOn) {
+      box.classList.remove('hidden');
+      adminTrack.classList.add('on');
+      if (label) label.textContent = 'Bus prompt: ON';
+      if (sublabel) sublabel.textContent = 'Parents will see the bus confirmation prompt';
+    } else {
+      box.classList.add('hidden');
+      adminTrack.classList.remove('on');
+      if (busOn) { busOn = false; document.getElementById('bus-track').classList.remove('on'); document.getElementById('bus-box').classList.remove('active'); }
+      if (label) label.textContent = 'Bus prompt: OFF';
+      if (sublabel) sublabel.textContent = 'Parents will not see the bus option';
+    }
   }
 
   function setMode(mode) {
@@ -695,7 +862,9 @@
       const person = document.getElementById('dropoff-name').value.trim();
       const rel = document.getElementById('dropoff-rel').value;
       const notes = document.getElementById('checkin-notes').value.trim();
-      log.push({ date, time, timestamp, type:'in', camper, person, rel, notes });
+      log.push({ date, time, timestamp, type:'in', camper, person, rel, notes, bus: busOn });
+      const busEl = document.getElementById('success-bus');
+      busOn ? busEl.classList.remove('hidden') : busEl.classList.add('hidden');
       showSuccess('in', camper, person ? 'Dropped off by ' + person : 'Check-in recorded at ' + time);
     } else {
       const person = document.getElementById('pickup-name').value.trim();
@@ -724,6 +893,7 @@
     document.getElementById('pickup-name').value = '';
     document.getElementById('pickup-rel').value = '';
     document.getElementById('checkin-notes').value = '';
+    if (busOn) { busOn = false; document.getElementById('bus-track').classList.remove('on'); document.getElementById('bus-box').classList.remove('active'); }
     updateCheckoutNote();
   }
 
@@ -762,7 +932,8 @@
     document.getElementById('sh-notarrived').textContent = notArrived.length;
     const shEl = document.getElementById('stillhere-list');
     shEl.innerHTML = stillHere.length ? stillHere.map(c => {
-      return '<div class="row-item"><span class="row-name">' + c + '</span><span class="row-time">In at ' + map[c].time + '</span><span class="badge badge-in">Here</span></div>';
+      const busEntry = log.find(e => e.camper === c && e.type === 'in' && e.bus);
+      return '<div class="row-item"><span class="row-name">' + c + '</span>' + (busEntry ? '<span class="badge badge-bus">🚌 Bus</span>' : '') + '<span class="row-time">In at ' + map[c].time + '</span><span class="badge badge-in">Here</span></div>';
     }).join('') : '<div class="empty">No campers currently checked in.</div>';
     const naEl = document.getElementById('notarrived-list');
     naEl.innerHTML = notArrived.length ? notArrived.map(c =>
@@ -776,12 +947,13 @@
     document.getElementById('log-checkins').textContent = log.filter(e => e.type === 'in').length;
     document.getElementById('log-checkouts').textContent = log.filter(e => e.type === 'out').length;
     document.getElementById('log-here').textContent = stillHere;
+    document.getElementById('log-bus').textContent = log.filter(e => e.bus).length;
     const el = document.getElementById('log-container');
     if (!log.length) { el.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
     const rows = [...log].reverse().map(e =>
       '<tr>' +
         '<td>' + e.time + '</td>' +
-        '<td><span class="badge ' + (e.type==='in'?'badge-in':'badge-out') + '">' + (e.type==='in'?'In':'Out') + '</span></td>' +
+        '<td><span class="badge ' + (e.type==='in'?'badge-in':'badge-out') + '">' + (e.type==='in'?'In':'Out') + '</span>' + (e.bus ? ' <span class="badge badge-bus">🚌</span>' : '') + '</td>' +
         '<td style="font-weight:600">' + e.camper + '</td>' +
         '<td>' + (e.person||'—') + (e.rel ? '<br><span style="font-size:10px;color:var(--text-muted)">'+e.rel+'</span>' : '') + '</td>' +
         '<td style="color:var(--text-muted)">' + (e.notes||'—') + '</td>' +
@@ -839,8 +1011,8 @@
 
   function exportCSV(silent) {
     if (!log.length) { if (!silent) alert('No records to export.'); return; }
-    const headers = ['Date','Time','Type','Camper','Person','Relationship','Notes'];
-    const rows = log.map(e => [e.date,e.time,e.type==='in'?'Check-In':'Check-Out',e.camper,e.person||'',e.rel||'',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+    const headers = ['Date','Time','Type','Camper','Person','Relationship','Bus','Notes'];
+    const rows = log.map(e => [e.date,e.time,e.type==='in'?'Check-In':'Check-Out',e.camper,e.person||'',e.rel||'',e.bus?'Yes':'No',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([[headers.join(','),...rows].join('\n')],{type:'text/csv'}));
     a.download = 'ssdc-log-' + new Date().toISOString().slice(0,10) + '.csv';
