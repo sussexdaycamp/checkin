@@ -742,10 +742,9 @@
 
 </div>
 
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getDatabase, ref, set, onValue, push, remove, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyDxjis7VZjPULD99E63V4tTQXwOnfEVfeU",
     databaseURL: "https://day-camp-check-in-default-rtdb.firebaseio.com",
@@ -753,12 +752,11 @@
     appId: "1:564190119553:web:38ddad0f29736755bc2f80"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
   let campers = [];
   let log = [];
-  let logKeys = {};
   let currentMode = 'in';
   let adminTab = 'roster';
   let adminOpen = false;
@@ -772,24 +770,21 @@
 
   // ── Real-time listeners ──────────────────────────────────────────────────
 
-  onValue(ref(db, 'campers'), snap => {
+  db.ref('campers').on('value', snap => {
     const val = snap.val();
     campers = val ? sortCampers(Object.values(val)) : [];
     refreshCamperSelect();
     renderRosterList();
     if (adminOpen && adminTab === 'stillhere') renderStillHere();
     if (adminOpen && adminTab === 'log') renderLog();
+    setSaveIndicator(campers.length ? 'Synced ✓' : 'Connected ✓');
   });
 
-  onValue(ref(db, 'log'), snap => {
+  db.ref('log').on('value', snap => {
     const val = snap.val();
     log = [];
-    logKeys = {};
     if (val) {
-      Object.entries(val).forEach(([k, v]) => {
-        log.push(v);
-        logKeys[v.timestamp + v.camper] = k;
-      });
+      Object.values(val).forEach(v => log.push(v));
       log.sort((a, b) => a.timestamp - b.timestamp);
     }
     if (adminOpen && adminTab === 'stillhere') renderStillHere();
@@ -797,7 +792,7 @@
     updateCheckoutNote();
   });
 
-  onValue(ref(db, 'settings'), snap => {
+  db.ref('settings').on('value', snap => {
     const val = snap.val();
     if (val && val.busFeatureOn !== undefined) {
       busFeatureOn = val.busFeatureOn;
@@ -808,27 +803,25 @@
     }
   });
 
-  // ── Save helpers ─────────────────────────────────────────────────────────
+  // ── Save helpers ──────────────────────────────────────────────────────────
 
   function saveCampers() {
     const obj = {};
     campers.forEach((c, i) => { obj[i] = c; });
-    set(ref(db, 'campers'), obj);
+    db.ref('campers').set(obj);
     setSaveIndicator('Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
   }
 
   function saveSettings() {
-    update(ref(db, 'settings'), { busFeatureOn });
-    setSaveIndicator('Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    db.ref('settings').update({ busFeatureOn });
   }
 
   function pushLogEntry(entry) {
-    push(ref(db, 'log'), entry);
-    setSaveIndicator('Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+    db.ref('log').push(entry);
   }
 
   function clearLogInDB() {
-    set(ref(db, 'log'), null);
+    db.ref('log').set(null);
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -845,18 +838,18 @@
 
   // ── Bus ───────────────────────────────────────────────────────────────────
 
-  window.toggleBus = function() {
+  function toggleBus() {
     if (!busFeatureOn) return;
     busOn = !busOn;
     document.getElementById('bus-track').classList.toggle('on', busOn);
     document.getElementById('bus-box').classList.toggle('active', busOn);
-  };
+  }
 
-  window.toggleBusFeature = function() {
+  function toggleBusFeature() {
     busFeatureOn = !busFeatureOn;
     applyBusFeature();
     saveSettings();
-  };
+  }
 
   function applyBusFeature() {
     const box = document.getElementById('bus-box');
@@ -879,7 +872,7 @@
 
   // ── Mode / form ───────────────────────────────────────────────────────────
 
-  window.setMode = function(mode) {
+  function setMode(mode) {
     currentMode = mode;
     document.getElementById('checkin-fields').classList.toggle('hidden', mode !== 'in');
     document.getElementById('checkout-fields').classList.toggle('hidden', mode !== 'out');
@@ -888,7 +881,7 @@
     document.getElementById('submit-btn').textContent = mode === 'in' ? 'Log check-in' : 'Log check-out';
     document.getElementById('submit-btn').className = 'submit-btn ' + (mode === 'in' ? 'submit-btn-in' : 'submit-btn-out');
     updateCheckoutNote();
-  };
+  }
 
   function updateCheckoutNote() {
     if (currentMode !== 'out') return;
@@ -904,7 +897,7 @@
 
   document.getElementById('camper-select').addEventListener('change', updateCheckoutNote);
 
-  window.submitEntry = function() {
+  function submitEntry() {
     const camper = document.getElementById('camper-select').value;
     if (!camper) { alert('Please select a camper.'); return; }
     const now = new Date();
@@ -927,7 +920,7 @@
       document.getElementById('success-bus').classList.add('hidden');
       showSuccess('out', camper, 'Picked up by ' + person + ' at ' + time);
     }
-  };
+  }
 
   function showSuccess(type, camper, detail) {
     document.getElementById('view-main').classList.add('hidden');
@@ -937,7 +930,7 @@
     document.getElementById('success-detail').textContent = detail;
   }
 
-  window.resetForm = function() {
+  function resetForm() {
     document.getElementById('view-success').classList.add('hidden');
     document.getElementById('view-main').classList.remove('hidden');
     document.getElementById('camper-select').value = '';
@@ -948,17 +941,17 @@
     document.getElementById('checkin-notes').value = '';
     if (busOn) { busOn = false; document.getElementById('bus-track').classList.remove('on'); document.getElementById('bus-box').classList.remove('active'); }
     updateCheckoutNote();
-  };
+  }
 
   // ── Admin ─────────────────────────────────────────────────────────────────
 
-  window.toggleAdmin = function() {
+  function toggleAdmin() {
     adminOpen = !adminOpen;
     document.getElementById('admin-panel').classList.toggle('hidden', !adminOpen);
     if (adminOpen) showAdminTab(adminTab);
-  };
+  }
 
-  window.showAdminTab = function(tab) {
+  function showAdminTab(tab) {
     adminTab = tab;
     ['roster','stillhere','log'].forEach(t => {
       document.getElementById('admin-' + t).classList.toggle('hidden', t !== tab);
@@ -968,7 +961,7 @@
     });
     if (tab === 'stillhere') renderStillHere();
     if (tab === 'log') renderLog();
-  };
+  }
 
   function getStatusMap() {
     const map = {};
@@ -1019,20 +1012,20 @@
 
   // ── Roster ────────────────────────────────────────────────────────────────
 
-  window.loadRoster = function() {
+  function loadRoster() {
     const text = document.getElementById('roster-paste').value.trim();
     if (!text) return;
     const names = text.split('\n').map(n => n.trim()).filter(Boolean);
     campers = sortCampers([...new Set([...campers, ...names])]);
     saveCampers();
     document.getElementById('roster-paste').value = '';
-  };
+  }
 
-  window.clearRoster = function() {
+  function clearRoster() {
     if (!confirm('Clear the entire roster?')) return;
     campers = [];
-    set(ref(db, 'campers'), null);
-  };
+    db.ref('campers').set(null);
+  }
 
   function refreshCamperSelect() {
     const sel = document.getElementById('camper-select');
@@ -1048,19 +1041,19 @@
     ).join('') : '';
   }
 
-  window.removeCamper = function(i) {
+  function removeCamper(i) {
     campers.splice(i, 1);
     saveCampers();
-  };
+  }
 
   // ── Log management ────────────────────────────────────────────────────────
 
-  window.clearLog = function() {
+  function clearLog() {
     if (!confirm('Clear all log entries?')) return;
     clearLogInDB();
-  };
+  }
 
-  window.exportCSV = function(silent) {
+  function exportCSV(silent) {
     if (!log.length) { if (!silent) alert('No records to export.'); return; }
     const headers = ['Date','Time','Type','Camper','Person','Relationship','Bus','Notes'];
     const rows = log.map(e => [e.date,e.time,e.type==='in'?'Check-In':'Check-Out',e.camper,e.person||'',e.rel||'',e.bus?'Yes':'No',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
@@ -1068,7 +1061,7 @@
     a.href = URL.createObjectURL(new Blob([[headers.join(','),...rows].join('\n')],{type:'text/csv'}));
     a.download = 'ssdc-log-' + new Date().toISOString().slice(0,10) + '.csv';
     a.click();
-  };
+  }
 
   // ── Daily reset at 5:30 PM ────────────────────────────────────────────────
 
@@ -1086,13 +1079,13 @@
 
   function triggerEndOfDayReset(manual) {
     if (!log.length && !manual) {
-      update(ref(db, 'settings'), { lastReset: todayDateString() + '-done' });
+      db.ref('settings').update({ lastReset: todayDateString() + '-done' });
       return;
     }
-    window.exportCSV(true);
+    exportCSV(true);
     setTimeout(function() {
       clearLogInDB();
-      update(ref(db, 'settings'), { lastReset: todayDateString() + '-done' });
+      db.ref('settings').update({ lastReset: todayDateString() + '-done' });
       showResetBanner();
     }, 800);
   }
@@ -1115,7 +1108,6 @@
   }, 30000);
 
   setSaveIndicator('Connecting...');
-
 </script>
 </body>
 </html>
