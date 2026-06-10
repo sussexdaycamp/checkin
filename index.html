@@ -742,44 +742,96 @@
 
 </div>
 
-<script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getDatabase, ref, set, onValue, push, remove, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDxjis7VZjPULD99E63V4tTQXwOnfEVfeU",
+    databaseURL: "https://day-camp-check-in-default-rtdb.firebaseio.com",
+    projectId: "day-camp-check-in",
+    appId: "1:564190119553:web:38ddad0f29736755bc2f80"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
   let campers = [];
   let log = [];
+  let logKeys = {};
   let currentMode = 'in';
   let adminTab = 'roster';
   let adminOpen = false;
   let busOn = false;
   let busFeatureOn = false;
 
-  const STORAGE_KEY_CAMPERS = 'ssdc-campers';
-  const STORAGE_KEY_LOG = 'ssdc-log';
-
-  function saveData() {
-    try {
-      localStorage.setItem(STORAGE_KEY_CAMPERS, JSON.stringify(campers));
-      localStorage.setItem(STORAGE_KEY_LOG, JSON.stringify(log));
-      localStorage.setItem('ssdc-bus-feature', JSON.stringify(busFeatureOn));
-      const now = new Date();
-      const el = document.getElementById('save-indicator');
-      if (el) el.textContent = 'Saved ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    } catch(e) {}
+  function setSaveIndicator(msg) {
+    const el = document.getElementById('save-indicator');
+    if (el) el.textContent = msg;
   }
 
-  function loadData() {
-    try {
-      const c = localStorage.getItem(STORAGE_KEY_CAMPERS);
-      const l = localStorage.getItem(STORAGE_KEY_LOG);
-      const b = localStorage.getItem('ssdc-bus-feature');
-      if (c) campers = JSON.parse(c);
-      if (l) log = JSON.parse(l);
-      if (b !== null) busFeatureOn = JSON.parse(b);
-      refreshCamperSelect();
-      renderRosterList();
+  // ── Real-time listeners ──────────────────────────────────────────────────
+
+  onValue(ref(db, 'campers'), snap => {
+    const val = snap.val();
+    campers = val ? sortCampers(Object.values(val)) : [];
+    refreshCamperSelect();
+    renderRosterList();
+    if (adminOpen && adminTab === 'stillhere') renderStillHere();
+    if (adminOpen && adminTab === 'log') renderLog();
+  });
+
+  onValue(ref(db, 'log'), snap => {
+    const val = snap.val();
+    log = [];
+    logKeys = {};
+    if (val) {
+      Object.entries(val).forEach(([k, v]) => {
+        log.push(v);
+        logKeys[v.timestamp + v.camper] = k;
+      });
+      log.sort((a, b) => a.timestamp - b.timestamp);
+    }
+    if (adminOpen && adminTab === 'stillhere') renderStillHere();
+    if (adminOpen && adminTab === 'log') renderLog();
+    updateCheckoutNote();
+  });
+
+  onValue(ref(db, 'settings'), snap => {
+    const val = snap.val();
+    if (val && val.busFeatureOn !== undefined) {
+      busFeatureOn = val.busFeatureOn;
       applyBusFeature();
-      const el = document.getElementById('save-indicator');
-      if (el) el.textContent = campers.length ? 'Data restored' : 'No saved data';
-    } catch(e) {}
+    }
+    if (val && val.lastReset) {
+      checkDailyResetFromDB(val.lastReset);
+    }
+  });
+
+  // ── Save helpers ─────────────────────────────────────────────────────────
+
+  function saveCampers() {
+    const obj = {};
+    campers.forEach((c, i) => { obj[i] = c; });
+    set(ref(db, 'campers'), obj);
+    setSaveIndicator('Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
   }
+
+  function saveSettings() {
+    update(ref(db, 'settings'), { busFeatureOn });
+    setSaveIndicator('Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  }
+
+  function pushLogEntry(entry) {
+    push(ref(db, 'log'), entry);
+    setSaveIndicator('Saved ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  }
+
+  function clearLogInDB() {
+    set(ref(db, 'log'), null);
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   function getLastName(name) {
     if (name.includes(',')) return name.split(',')[0].trim().toLowerCase();
@@ -791,20 +843,20 @@
     return [...arr].sort((a, b) => getLastName(a).localeCompare(getLastName(b)));
   }
 
-  function toggleBus() {
+  // ── Bus ───────────────────────────────────────────────────────────────────
+
+  window.toggleBus = function() {
     if (!busFeatureOn) return;
     busOn = !busOn;
-    const track = document.getElementById('bus-track');
-    const box = document.getElementById('bus-box');
-    track.classList.toggle('on', busOn);
-    box.classList.toggle('active', busOn);
-  }
+    document.getElementById('bus-track').classList.toggle('on', busOn);
+    document.getElementById('bus-box').classList.toggle('active', busOn);
+  };
 
-  function toggleBusFeature() {
+  window.toggleBusFeature = function() {
     busFeatureOn = !busFeatureOn;
     applyBusFeature();
-    saveData();
-  }
+    saveSettings();
+  };
 
   function applyBusFeature() {
     const box = document.getElementById('bus-box');
@@ -825,7 +877,9 @@
     }
   }
 
-  function setMode(mode) {
+  // ── Mode / form ───────────────────────────────────────────────────────────
+
+  window.setMode = function(mode) {
     currentMode = mode;
     document.getElementById('checkin-fields').classList.toggle('hidden', mode !== 'in');
     document.getElementById('checkout-fields').classList.toggle('hidden', mode !== 'out');
@@ -834,7 +888,7 @@
     document.getElementById('submit-btn').textContent = mode === 'in' ? 'Log check-in' : 'Log check-out';
     document.getElementById('submit-btn').className = 'submit-btn ' + (mode === 'in' ? 'submit-btn-in' : 'submit-btn-out');
     updateCheckoutNote();
-  }
+  };
 
   function updateCheckoutNote() {
     if (currentMode !== 'out') return;
@@ -850,19 +904,18 @@
 
   document.getElementById('camper-select').addEventListener('change', updateCheckoutNote);
 
-  function submitEntry() {
+  window.submitEntry = function() {
     const camper = document.getElementById('camper-select').value;
     if (!camper) { alert('Please select a camper.'); return; }
     const now = new Date();
     const time = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     const date = now.toLocaleDateString();
     const timestamp = now.getTime();
-
     if (currentMode === 'in') {
       const person = document.getElementById('dropoff-name').value.trim();
       const rel = document.getElementById('dropoff-rel').value;
       const notes = document.getElementById('checkin-notes').value.trim();
-      log.push({ date, time, timestamp, type:'in', camper, person, rel, notes, bus: busOn });
+      pushLogEntry({ date, time, timestamp, type:'in', camper, person, rel, notes, bus: busOn });
       const busEl = document.getElementById('success-bus');
       busOn ? busEl.classList.remove('hidden') : busEl.classList.add('hidden');
       showSuccess('in', camper, person ? 'Dropped off by ' + person : 'Check-in recorded at ' + time);
@@ -870,11 +923,11 @@
       const person = document.getElementById('pickup-name').value.trim();
       const rel = document.getElementById('pickup-rel').value;
       if (!person) { alert('Please enter your name.'); return; }
-      log.push({ date, time, timestamp, type:'out', camper, person, rel, notes:'' });
+      pushLogEntry({ date, time, timestamp, type:'out', camper, person, rel, notes:'', bus: false });
+      document.getElementById('success-bus').classList.add('hidden');
       showSuccess('out', camper, 'Picked up by ' + person + ' at ' + time);
     }
-    saveData();
-  }
+  };
 
   function showSuccess(type, camper, detail) {
     document.getElementById('view-main').classList.add('hidden');
@@ -884,7 +937,7 @@
     document.getElementById('success-detail').textContent = detail;
   }
 
-  function resetForm() {
+  window.resetForm = function() {
     document.getElementById('view-success').classList.add('hidden');
     document.getElementById('view-main').classList.remove('hidden');
     document.getElementById('camper-select').value = '';
@@ -895,15 +948,17 @@
     document.getElementById('checkin-notes').value = '';
     if (busOn) { busOn = false; document.getElementById('bus-track').classList.remove('on'); document.getElementById('bus-box').classList.remove('active'); }
     updateCheckoutNote();
-  }
+  };
 
-  function toggleAdmin() {
+  // ── Admin ─────────────────────────────────────────────────────────────────
+
+  window.toggleAdmin = function() {
     adminOpen = !adminOpen;
     document.getElementById('admin-panel').classList.toggle('hidden', !adminOpen);
     if (adminOpen) showAdminTab(adminTab);
-  }
+  };
 
-  function showAdminTab(tab) {
+  window.showAdminTab = function(tab) {
     adminTab = tab;
     ['roster','stillhere','log'].forEach(t => {
       document.getElementById('admin-' + t).classList.toggle('hidden', t !== tab);
@@ -913,7 +968,7 @@
     });
     if (tab === 'stillhere') renderStillHere();
     if (tab === 'log') renderLog();
-  }
+  };
 
   function getStatusMap() {
     const map = {};
@@ -962,24 +1017,22 @@
     el.innerHTML = '<table class="log-table"><thead><tr><th>Time</th><th>Type</th><th>Camper</th><th>Person</th><th>Notes</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
-  function loadRoster() {
+  // ── Roster ────────────────────────────────────────────────────────────────
+
+  window.loadRoster = function() {
     const text = document.getElementById('roster-paste').value.trim();
     if (!text) return;
     const names = text.split('\n').map(n => n.trim()).filter(Boolean);
     campers = sortCampers([...new Set([...campers, ...names])]);
-    refreshCamperSelect();
-    renderRosterList();
+    saveCampers();
     document.getElementById('roster-paste').value = '';
-    saveData();
-  }
+  };
 
-  function clearRoster() {
+  window.clearRoster = function() {
     if (!confirm('Clear the entire roster?')) return;
     campers = [];
-    refreshCamperSelect();
-    renderRosterList();
-    saveData();
-  }
+    set(ref(db, 'campers'), null);
+  };
 
   function refreshCamperSelect() {
     const sel = document.getElementById('camper-select');
@@ -995,21 +1048,19 @@
     ).join('') : '';
   }
 
-  function removeCamper(i) {
-    campers.splice(i,1);
-    refreshCamperSelect();
-    renderRosterList();
-    saveData();
-  }
+  window.removeCamper = function(i) {
+    campers.splice(i, 1);
+    saveCampers();
+  };
 
-  function clearLog() {
+  // ── Log management ────────────────────────────────────────────────────────
+
+  window.clearLog = function() {
     if (!confirm('Clear all log entries?')) return;
-    log = [];
-    saveData();
-    renderLog();
-  }
+    clearLogInDB();
+  };
 
-  function exportCSV(silent) {
+  window.exportCSV = function(silent) {
     if (!log.length) { if (!silent) alert('No records to export.'); return; }
     const headers = ['Date','Time','Type','Camper','Person','Relationship','Bus','Notes'];
     const rows = log.map(e => [e.date,e.time,e.type==='in'?'Check-In':'Check-Out',e.camper,e.person||'',e.rel||'',e.bus?'Yes':'No',e.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
@@ -1017,52 +1068,31 @@
     a.href = URL.createObjectURL(new Blob([[headers.join(','),...rows].join('\n')],{type:'text/csv'}));
     a.download = 'ssdc-log-' + new Date().toISOString().slice(0,10) + '.csv';
     a.click();
-  }
+  };
 
-  // ── Daily reset at 5:30 PM ──
+  // ── Daily reset at 5:30 PM ────────────────────────────────────────────────
 
-  const RESET_HOUR = 17;   // 5 PM
-  const RESET_MIN  = 30;   // :30
+  const RESET_HOUR = 17;
+  const RESET_MIN  = 30;
 
-  function todayDateString() {
-    return new Date().toLocaleDateString();
-  }
+  function todayDateString() { return new Date().toLocaleDateString(); }
 
-  function checkDailyReset() {
-    const lastReset = localStorage.getItem('ssdc-last-reset');
+  function checkDailyResetFromDB(lastReset) {
     const today = todayDateString();
     const now = new Date();
-    const isPastResetTime = now.getHours() > RESET_HOUR || (now.getHours() === RESET_HOUR && now.getMinutes() >= RESET_MIN);
-
-    // If we've already reset today at or after 5:30, nothing to do
-    if (lastReset === today + '-done') return;
-
-    // If it's past 5:30 and we haven't reset for today yet, do it now
-    if (isPastResetTime && lastReset !== today + '-done') {
-      triggerEndOfDayReset();
-    }
+    const isPast = now.getHours() > RESET_HOUR || (now.getHours() === RESET_HOUR && now.getMinutes() >= RESET_MIN);
+    if (isPast && lastReset !== today + '-done') triggerEndOfDayReset();
   }
 
   function triggerEndOfDayReset(manual) {
     if (!log.length && !manual) {
-      // No entries — just mark reset done silently
-      localStorage.setItem('ssdc-last-reset', todayDateString() + '-done');
+      update(ref(db, 'settings'), { lastReset: todayDateString() + '-done' });
       return;
     }
-
-    // Export CSV first
-    exportCSV(true);
-
-    // Short delay so the download initiates before we wipe
+    window.exportCSV(true);
     setTimeout(function() {
-      log = [];
-      localStorage.setItem('ssdc-log', JSON.stringify(log));
-      localStorage.setItem('ssdc-last-reset', todayDateString() + '-done');
-      // Refresh any open admin views
-      if (adminOpen) {
-        if (adminTab === 'log') renderLog();
-        if (adminTab === 'stillhere') renderStillHere();
-      }
+      clearLogInDB();
+      update(ref(db, 'settings'), { lastReset: todayDateString() + '-done' });
       showResetBanner();
     }, 800);
   }
@@ -1078,22 +1108,14 @@
     setTimeout(function() { banner.remove(); }, 6000);
   }
 
-  function scheduleNextCheck() {
-    // Check every 30 seconds whether it's time to reset
-    setInterval(function() {
-      const now = new Date();
-      const lastReset = localStorage.getItem('ssdc-last-reset');
-      const today = todayDateString();
-      const isPastResetTime = now.getHours() > RESET_HOUR || (now.getHours() === RESET_HOUR && now.getMinutes() >= RESET_MIN);
-      if (isPastResetTime && lastReset !== today + '-done') {
-        triggerEndOfDayReset();
-      }
-    }, 30000);
-  }
+  setInterval(function() {
+    const now = new Date();
+    const isPast = now.getHours() > RESET_HOUR || (now.getHours() === RESET_HOUR && now.getMinutes() >= RESET_MIN);
+    if (isPast) triggerEndOfDayReset();
+  }, 30000);
 
-  loadData();
-  checkDailyReset();
-  scheduleNextCheck();
+  setSaveIndicator('Connecting...');
+
 </script>
 </body>
 </html>
