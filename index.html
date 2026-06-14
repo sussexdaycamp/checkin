@@ -572,6 +572,53 @@
     margin-top: 4px;
   }
 
+  .camper-checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+
+  .camper-tile {
+    padding: 14px 12px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .camper-tile.selected {
+    background: var(--green-light);
+    border-color: var(--green-mid);
+    color: var(--green-dark);
+  }
+
+  .camper-tile.selected::before {
+    content: '✓ ';
+  }
+
+  .checkout-tile.selected {
+    background: var(--red-light);
+    border-color: var(--red-mid);
+    color: var(--red-dark);
+  }
+
+  .no-campers-msg {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 15px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
   .hidden { display: none !important; }
 
   @media (max-width: 480px) {
@@ -593,7 +640,7 @@
   <div id="view-main">
     <div class="welcome">
       <h2>Welcome!</h2>
-      <p>Please check your camper in or out below.</p>
+      <p>Select Check-In to drop off one or more campers, or Check-Out to pick up.</p>
     </div>
 
     <div class="big-toggle">
@@ -608,10 +655,11 @@
     </div>
 
     <div class="card">
-      <span class="field-label">Select your camper</span>
-      <select id="camper-select"><option value="">— Tap to select —</option></select>
 
       <div id="checkin-fields">
+        <span class="field-label">Select campers <span style="font-size:14px;font-weight:400">(tap all that apply)</span></span>
+        <div id="camper-checklist"></div>
+
         <span class="field-label">Your full name</span>
         <input type="text" id="dropoff-name" placeholder="e.g. Sandra Jones" autocomplete="name" />
         <span class="field-label">Your relationship to camper</span>
@@ -637,10 +685,12 @@
             </div>
           </div>
         </div>
+        <button class="submit-btn submit-btn-in" onclick="submitEntry()">Log check-in</button>
       </div>
 
       <div id="checkout-fields" class="hidden">
-        <div class="status-note status-neutral" id="checkout-status-note">Select a camper above.</div>
+        <span class="field-label">Select campers <span style="font-size:14px;font-weight:400">(tap all that apply)</span></span>
+        <div id="camper-checkout-checklist"></div>
         <span class="field-label">Your full name <span style="font-size:12px;font-weight:400;">(as it appears on your ID)</span></span>
         <input type="text" id="pickup-name" placeholder="e.g. Robert Smith" autocomplete="name" />
         <span class="field-label">Your relationship to camper</span>
@@ -653,9 +703,9 @@
           <option>Family friend</option>
           <option>Other authorized</option>
         </select>
+        <button class="submit-btn submit-btn-out" onclick="submitEntry()">Log check-out</button>
       </div>
 
-      <button class="submit-btn submit-btn-in" id="submit-btn" onclick="submitEntry()">Log check-in</button>
     </div>
 
     <div class="admin-toggle">
@@ -878,69 +928,58 @@
     document.getElementById('checkout-fields').classList.toggle('hidden', mode !== 'out');
     document.getElementById('btn-in').className = 'big-btn' + (mode === 'in' ? ' active-in' : '');
     document.getElementById('btn-out').className = 'big-btn' + (mode === 'out' ? ' active-out' : '');
-    document.getElementById('submit-btn').textContent = mode === 'in' ? 'Log check-in' : 'Log check-out';
-    document.getElementById('submit-btn').className = 'submit-btn ' + (mode === 'in' ? 'submit-btn-in' : 'submit-btn-out');
-    updateCheckoutNote();
   };
 
-  function updateCheckoutNote() {
-    if (currentMode !== 'out') return;
-    const camper = document.getElementById('camper-select').value;
-    const note = document.getElementById('checkout-status-note');
-    if (!camper) { note.className = 'status-note status-neutral'; note.textContent = 'Select a camper above.'; return; }
-    const lastIn = [...log].reverse().find(e => e.camper === camper && e.type === 'in');
-    const lastOut = [...log].reverse().find(e => e.camper === camper && e.type === 'out');
-    if (!lastIn) { note.className = 'status-note status-warn'; note.textContent = camper + ' has not been checked in today. Please see a staff member.'; }
-    else if (lastOut && lastOut.timestamp > lastIn.timestamp) { note.className = 'status-note status-warn'; note.textContent = camper + ' was already checked out at ' + lastOut.time + '.'; }
-    else { note.className = 'status-note status-ok'; note.textContent = camper + ' is here and ready to go — checked in at ' + lastIn.time + '.'; }
-  }
-
-  document.getElementById('camper-select').addEventListener('change', updateCheckoutNote);
-
   window.submitEntry = function() {
-    const camper = document.getElementById('camper-select').value;
-    if (!camper) { alert('Please select a camper.'); return; }
     const now = new Date();
     const time = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     const date = now.toLocaleDateString();
     const timestamp = now.getTime();
+
     if (currentMode === 'in') {
+      const selected = [...document.querySelectorAll('.camper-tile.selected')].map(el => el.dataset.name);
+      if (!selected.length) { alert('Please select at least one camper.'); return; }
       const person = document.getElementById('dropoff-name').value.trim();
       const rel = document.getElementById('dropoff-rel').value;
       const notes = document.getElementById('checkin-notes').value.trim();
-      pushLogEntry({ date, time, timestamp, type:'in', camper, person, rel, notes, bus: busOn });
+      selected.forEach(camper => {
+        pushLogEntry({ date, time, timestamp, type:'in', camper, person, rel, notes, bus: busOn });
+      });
       const busEl = document.getElementById('success-bus');
       busOn ? busEl.classList.remove('hidden') : busEl.classList.add('hidden');
-      showSuccess('in', camper, person ? 'Dropped off by ' + person : 'Check-in recorded at ' + time);
+      showSuccess('in', selected, person ? 'Dropped off by ' + person : 'Check-in recorded at ' + time);
     } else {
+      const selected = [...document.querySelectorAll('.checkout-tile.selected')].map(el => el.dataset.name);
+      if (!selected.length) { alert('Please select at least one camper.'); return; }
       const person = document.getElementById('pickup-name').value.trim();
       const rel = document.getElementById('pickup-rel').value;
       if (!person) { alert('Please enter your name.'); return; }
-      pushLogEntry({ date, time, timestamp, type:'out', camper, person, rel, notes:'', bus: false });
+      selected.forEach(camper => {
+        pushLogEntry({ date, time, timestamp, type:'out', camper, person, rel, notes:'', bus: false });
+      });
       document.getElementById('success-bus').classList.add('hidden');
-      showSuccess('out', camper, 'Picked up by ' + person + ' at ' + time);
+      showSuccess('out', selected, 'Picked up by ' + person + ' at ' + time);
     }
   };
 
-  function showSuccess(type, camper, detail) {
+  function showSuccess(type, campers, detail) {
     document.getElementById('view-main').classList.add('hidden');
     document.getElementById('view-success').classList.remove('hidden');
     document.getElementById('success-icon').className = 'success-icon ' + (type === 'in' ? 'success-icon-in' : 'success-icon-out');
-    document.getElementById('success-name').textContent = camper;
+    document.getElementById('success-name').textContent = campers.join(', ');
     document.getElementById('success-detail').textContent = detail;
   }
 
   window.resetForm = function() {
     document.getElementById('view-success').classList.add('hidden');
     document.getElementById('view-main').classList.remove('hidden');
-    document.getElementById('camper-select').value = '';
+    document.querySelectorAll('.camper-tile.selected').forEach(el => el.classList.remove('selected'));
     document.getElementById('dropoff-name').value = '';
     document.getElementById('dropoff-rel').value = '';
     document.getElementById('pickup-name').value = '';
     document.getElementById('pickup-rel').value = '';
     document.getElementById('checkin-notes').value = '';
     if (busOn) { busOn = false; document.getElementById('bus-track').classList.remove('on'); document.getElementById('bus-box').classList.remove('active'); }
-    updateCheckoutNote();
   };
 
   // ── Admin ─────────────────────────────────────────────────────────────────
@@ -1028,10 +1067,41 @@
   };
 
   function refreshCamperSelect() {
-    const sel = document.getElementById('camper-select');
-    sel.innerHTML = '<option value="">— Tap to select —</option>';
-    campers.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    renderCamperChecklist();
+    renderCamperCheckoutChecklist();
   }
+
+  function renderCamperChecklist() {
+    const el = document.getElementById('camper-checklist');
+    if (!el) return;
+    if (!campers.length) {
+      el.innerHTML = '<div class="no-campers-msg">No campers loaded yet. Please see a staff member.</div>';
+      return;
+    }
+    el.innerHTML = '<div class="camper-checklist">' +
+      campers.map(c =>
+        '<div class="camper-tile" onclick="toggleCamperTile(this)" data-name="' + c.replace(/"/g,'&quot;') + '">' + c + '</div>'
+      ).join('') +
+    '</div>';
+  }
+
+  function renderCamperCheckoutChecklist() {
+    const el = document.getElementById('camper-checkout-checklist');
+    if (!el) return;
+    if (!campers.length) {
+      el.innerHTML = '<div class="no-campers-msg">No campers loaded yet. Please see a staff member.</div>';
+      return;
+    }
+    el.innerHTML = '<div class="camper-checklist">' +
+      campers.map(c =>
+        '<div class="camper-tile checkout-tile" onclick="toggleCamperTile(this)" data-name="' + c.replace(/"/g,'&quot;') + '">' + c + '</div>'
+      ).join('') +
+    '</div>';
+  }
+
+  window.toggleCamperTile = function(el) {
+    el.classList.toggle('selected');
+  };
 
   function renderRosterList() {
     document.getElementById('roster-count').textContent = campers.length + ' campers loaded';
