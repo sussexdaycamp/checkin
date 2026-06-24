@@ -572,12 +572,64 @@
     margin-top: 4px;
   }
 
+  .alpha-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .alpha-btn {
+    padding: 6px 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .alpha-btn.active-in {
+    background: var(--green-dark);
+    border-color: var(--green-dark);
+    color: white;
+  }
+
+  .alpha-btn.active-out {
+    background: var(--red-dark);
+    border-color: var(--red-dark);
+    color: white;
+  }
+
+  .alpha-btn.disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .letter-divider {
+    padding: 6px 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
   .camper-checklist {
     margin-bottom: 1.25rem;
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     overflow-y: auto;
-    max-height: 280px;
+    max-height: 320px;
   }
 
   .camper-check-item {
@@ -643,6 +695,99 @@
     margin-bottom: 1rem;
   }
 
+  .qr-scan-btn {
+    width: 100%;
+    padding: 18px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: 2.5px solid var(--bus-border);
+    background: var(--bus-light);
+    color: var(--bus);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+
+  .qr-scan-btn:active { background: var(--bus); color: white; }
+
+  .pickup-person-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+
+  .pickup-person-row:last-child { border-bottom: none; }
+
+  .pickup-person-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .pickup-person-campers {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .qr-checkbox {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .qr-checkbox.checked {
+    background: var(--bus);
+    border-color: var(--bus);
+    color: white;
+  }
+
+  .qr-authorized-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+
+  .qr-authorized-item.selected {
+    background: var(--red-light);
+    border-color: var(--red-border);
+  }
+
+  .qr-authorized-item .camper-checkbox {
+    background: var(--surface);
+    border-color: var(--border);
+    color: transparent;
+  }
+
+  .qr-authorized-item.selected .camper-checkbox {
+    background: var(--red-dark);
+    border-color: var(--red-dark);
+    color: white;
+  }
+
   .hidden { display: none !important; }
 
   @media (max-width: 480px) {
@@ -682,6 +827,7 @@
 
       <div id="checkin-fields">
         <span class="field-label">Select campers <span style="font-size:14px;font-weight:400">(tap all that apply)</span></span>
+        <div class="alpha-bar" id="alpha-bar-in"></div>
         <div id="camper-checklist"></div>
 
         <span class="field-label">Your full name</span>
@@ -713,7 +859,12 @@
       </div>
 
       <div id="checkout-fields" class="hidden">
+        <div style="margin-bottom:1.25rem;">
+          <button class="qr-scan-btn" onclick="startQRScan()">📷 Scan QR Code</button>
+          <div style="text-align:center;font-size:14px;color:var(--text-muted);margin-top:8px;">or select campers manually below</div>
+        </div>
         <span class="field-label">Select campers <span style="font-size:14px;font-weight:400">(tap all that apply)</span></span>
+        <div class="alpha-bar" id="alpha-bar-out"></div>
         <div id="camper-checkout-checklist"></div>
         <span class="field-label">Your full name <span style="font-size:12px;font-weight:400;">(as it appears on your ID)</span></span>
         <input type="text" id="pickup-name" placeholder="e.g. Robert Smith" autocomplete="name" />
@@ -743,6 +894,7 @@
       </div>
       <div class="admin-tab-bar">
         <button class="admin-tab active" onclick="showAdminTab('roster')">Roster</button>
+        <button class="admin-tab" onclick="showAdminTab('pickups')">Pickups</button>
         <button class="admin-tab" onclick="showAdminTab('stillhere')">Still Here</button>
         <button class="admin-tab" onclick="showAdminTab('log')">Log</button>
       </div>
@@ -772,7 +924,71 @@
         </div>
       </div>
 
-      <div id="admin-stillhere" class="hidden">
+      <div id="admin-pickups" class="hidden">
+
+        <!-- Sub tabs -->
+        <div style="display:flex;gap:4px;margin-bottom:1rem;background:var(--bg);border-radius:var(--radius-sm);padding:3px;">
+          <button class="admin-tab active" id="pickup-tab-import" onclick="showPickupTab('import')">Import</button>
+          <button class="admin-tab" id="pickup-tab-manage" onclick="showPickupTab('manage')">Manage</button>
+          <button class="admin-tab" id="pickup-tab-qr" onclick="showPickupTab('qr')">QR Codes</button>
+        </div>
+
+        <!-- Import -->
+        <div id="pickup-import">
+          <div class="section-label">Import from CivicRec Export</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Paste your CivicRec export below. Include columns for participant name and authorized pickups. One row per camper.</div>
+          <textarea class="admin-textarea" id="pickup-paste" style="height:100px;" placeholder="Participant Name, Authorized Pickups&#10;Smith Jake, Bob Smith; Sandra Smith; Grandma Betty&#10;Jones Mia, Robert Jones; Lisa Jones"></textarea>
+          <div style="margin-bottom:8px;display:flex;gap:8px;align-items:center;">
+            <div class="section-label" style="margin-bottom:0">Camper name column #</div>
+            <input type="number" id="pickup-camper-col" value="1" min="1" style="width:60px;font-size:14px;padding:6px 8px;margin-bottom:0;" />
+            <div class="section-label" style="margin-bottom:0">Pickup column #</div>
+            <input type="number" id="pickup-pickup-col" value="2" min="1" style="width:60px;font-size:14px;padding:6px 8px;margin-bottom:0;" />
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">Separate multiple pickup people with semicolons ( ; ) in CivicRec</div>
+          <button class="admin-btn" onclick="previewPickupImport()">Preview import</button>
+          <div id="pickup-preview" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- Manage -->
+        <div id="pickup-manage" class="hidden">
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input type="text" id="pickup-search" placeholder="Search by name..." style="font-size:14px;padding:8px 12px;margin-bottom:0;flex:1;" oninput="renderPickupManage()" />
+            <button class="admin-btn" onclick="showAddPickupForm()">+ Add</button>
+          </div>
+          <div id="pickup-add-form" class="hidden" style="background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;border:1px solid var(--border);">
+            <div class="section-label">Add pickup person</div>
+            <input type="text" id="new-pickup-name" placeholder="Full name" style="font-size:15px;padding:10px 12px;margin-bottom:8px;" />
+            <input type="text" id="new-pickup-campers" placeholder="Authorized campers (comma separated)" style="font-size:15px;padding:10px 12px;margin-bottom:8px;" />
+            <div style="display:flex;gap:8px;">
+              <button class="admin-btn" onclick="saveNewPickup()">Save</button>
+              <button class="admin-btn admin-btn-danger" onclick="document.getElementById('pickup-add-form').classList.add('hidden')">Cancel</button>
+            </div>
+          </div>
+          <div id="pickup-manage-list"><div class="empty">No pickup people loaded yet.</div></div>
+        </div>
+
+        <!-- QR Codes -->
+        <div id="pickup-qr" class="hidden">
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <input type="text" id="qr-search" placeholder="Search by name..." style="font-size:14px;padding:8px 12px;margin-bottom:0;flex:1;" oninput="renderQRList()" />
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">Select people to generate QR codes for, then print or email.</div>
+          <div id="qr-person-list"><div class="empty">No pickup people loaded yet.</div></div>
+          <div id="qr-actions" class="hidden" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="admin-btn" onclick="printQRCodes()">🖨️ Print selected</button>
+            <button class="admin-btn" onclick="emailQRCode()">✉️ Email selected</button>
+          </div>
+          <div id="qr-email-form" class="hidden" style="margin-top:10px;background:var(--bg);border-radius:var(--radius-sm);padding:12px;border:1px solid var(--border);">
+            <div class="section-label">Send QR code by email</div>
+            <input type="email" id="qr-email-addr" placeholder="Email address" style="font-size:15px;padding:10px 12px;margin-bottom:8px;" />
+            <div style="display:flex;gap:8px;">
+              <button class="admin-btn" onclick="sendQREmail()">Send</button>
+              <button class="admin-btn admin-btn-danger" onclick="document.getElementById('qr-email-form').classList.add('hidden')">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
         <div class="stats-row">
           <div class="stat"><div class="stat-num" id="sh-roster">0</div><div class="stat-label">On roster</div></div>
           <div class="stat"><div class="stat-num" id="sh-here" style="color:var(--green-dark)">0</div><div class="stat-label">Still here</div></div>
@@ -801,7 +1017,46 @@
     </div>
   </div>
 
-  <div id="view-success" class="hidden">
+  <div id="view-qr-scan" class="hidden">
+    <div style="text-align:center;padding:1.5rem 1rem 0;">
+      <h2 style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;">Scan QR Code</h2>
+      <p style="font-size:15px;color:var(--text-muted);margin-bottom:1rem;">Hold the QR code up to the camera</p>
+    </div>
+    <div style="position:relative;background:#000;border-radius:var(--radius);overflow:hidden;margin-bottom:1rem;aspect-ratio:1;">
+      <video id="qr-video" style="width:100%;height:100%;object-fit:cover;" playsinline autoplay></video>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <div style="width:60%;aspect-ratio:1;border:3px solid white;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.4);"></div>
+      </div>
+    </div>
+    <button class="done-btn" style="width:100%;margin-top:0.5rem;" onclick="stopQRScan()">Cancel</button>
+  </div>
+
+  <div id="view-qr-result" class="hidden">
+    <div style="text-align:center;padding:2rem 1rem;">
+      <div style="font-size:48px;margin-bottom:1rem;">✓</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;" id="qr-person-name"></div>
+      <div style="font-size:15px;color:var(--text-muted);margin-bottom:1.5rem;" id="qr-person-rel"></div>
+      <div style="text-align:left;margin-bottom:1.25rem;">
+        <div style="font-size:16px;font-weight:700;font-family:'Nunito',sans-serif;color:var(--text);margin-bottom:8px;">Authorized to pick up:</div>
+        <div id="qr-authorized-list"></div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <span class="field-label" style="text-align:left">Your relationship to camper</span>
+        <select id="qr-pickup-rel" style="font-size:18px;padding:12px 14px;margin-bottom:0;">
+          <option value="">— Select —</option>
+          <option>Parent / Guardian</option>
+          <option>Grandparent</option>
+          <option>Sibling (18+)</option>
+          <option>Aunt / Uncle</option>
+          <option>Family friend</option>
+          <option>Other authorized</option>
+        </select>
+      </div>
+      <button class="submit-btn submit-btn-out" style="margin-bottom:12px;" onclick="submitQRCheckout()">Log check-out</button>
+      <br/>
+      <button class="done-btn" onclick="cancelQRResult()">Cancel</button>
+    </div>
+  </div>
     <div class="success-screen">
       <div class="success-icon" id="success-icon">
         <span style="font-size:36px;line-height:1;">✓</span>
@@ -831,11 +1086,15 @@
 
   let campers = [];
   let log = [];
+  let pickups = {};
   let currentMode = 'in';
   let adminTab = 'roster';
+  let pickupTab = 'import';
   let adminOpen = false;
   let busOn = false;
   let busFeatureOn = false;
+  let qrScanner = null;
+  let qrScannedPerson = null;
 
   function setSaveIndicator(msg) {
     const el = document.getElementById('save-indicator');
@@ -843,6 +1102,15 @@
   }
 
   // ── Real-time listeners ──────────────────────────────────────────────────
+
+  onValue(ref(db, 'pickups'), snap => {
+    const val = snap.val();
+    pickups = val || {};
+    if (adminOpen && adminTab === 'pickups') {
+      if (pickupTab === 'manage') renderPickupManage();
+      if (pickupTab === 'qr') renderQRList();
+    }
+  });
 
   onValue(ref(db, 'campers'), snap => {
     const val = snap.val();
@@ -999,6 +1267,7 @@
     document.getElementById('view-main').classList.remove('hidden');
     document.querySelectorAll('.camper-check-item.selected-in').forEach(el => el.classList.remove('selected-in'));
     document.querySelectorAll('.camper-check-item.selected-out').forEach(el => el.classList.remove('selected-out'));
+    document.querySelectorAll('.alpha-btn').forEach(b => b.classList.remove('active-in','active-out'));
     document.getElementById('dropoff-name').value = '';
     document.getElementById('dropoff-rel').value = '';
     document.getElementById('pickup-name').value = '';
@@ -1017,14 +1286,15 @@
 
   window.showAdminTab = function(tab) {
     adminTab = tab;
-    ['roster','stillhere','log'].forEach(t => {
+    ['roster','pickups','stillhere','log'].forEach(t => {
       document.getElementById('admin-' + t).classList.toggle('hidden', t !== tab);
     });
     document.querySelectorAll('.admin-tab').forEach((el,i) => {
-      el.classList.toggle('active', ['roster','stillhere','log'][i] === tab);
+      el.classList.toggle('active', ['roster','pickups','stillhere','log'][i] === tab);
     });
     if (tab === 'stillhere') renderStillHere();
     if (tab === 'log') renderLog();
+    if (tab === 'pickups') showPickupTab(pickupTab);
   };
 
   function getStatusMap() {
@@ -1096,21 +1366,56 @@
     renderCamperCheckoutChecklist();
   }
 
+  function getLastInitial(name) {
+    if (name.includes(',')) return name.split(',')[0].trim()[0].toUpperCase();
+    const parts = name.trim().split(/\s+/);
+    return parts[parts.length - 1][0].toUpperCase();
+  }
+
+  function buildAlphaBar(camperList, barId, listId, mode) {
+    const bar = document.getElementById(barId);
+    if (!bar) return;
+    const letters = [...new Set(camperList.map(c => getLastInitial(c)))].sort();
+    bar.innerHTML = letters.map(l =>
+      '<button class="alpha-btn" onclick="jumpToLetter(\'' + l + '\',\'' + listId + '\',\'' + mode + '\',this)">' + l + '</button>'
+    ).join('');
+  }
+
+  window.jumpToLetter = function(letter, listId, mode, btn) {
+    const barId = mode === 'in' ? 'alpha-bar-in' : 'alpha-bar-out';
+    document.querySelectorAll('#' + barId + ' .alpha-btn').forEach(b => b.classList.remove('active-in','active-out'));
+    btn.classList.add(mode === 'in' ? 'active-in' : 'active-out');
+    const container = document.getElementById(listId).querySelector('.camper-checklist');
+    if (!container) return;
+    const divider = container.querySelector('[data-letter="' + letter + '"]');
+    if (!divider) return;
+    const containerRect = container.getBoundingClientRect();
+    const dividerRect = divider.getBoundingClientRect();
+    container.scrollTop += dividerRect.top - containerRect.top;
+  };
+
   function renderCamperChecklist() {
     const el = document.getElementById('camper-checklist');
     if (!el) return;
     if (!campers.length) {
       el.innerHTML = '<div class="no-campers-msg">No campers loaded yet. Please see a staff member.</div>';
+      const bar = document.getElementById('alpha-bar-in');
+      if (bar) bar.innerHTML = '';
       return;
     }
-    el.innerHTML = '<div class="camper-checklist">' +
-      campers.map(c =>
-        '<div class="camper-check-item" onclick="toggleCheckItem(this,\'in\')" data-name="' + c.replace(/"/g,'&quot;') + '">' +
-          '<div class="camper-checkbox">✓</div>' +
-          '<div class="camper-check-name">' + c + '</div>' +
-        '</div>'
-      ).join('') +
-    '</div>';
+    let html = '<div class="camper-checklist">';
+    let lastLetter = '';
+    campers.forEach(c => {
+      const letter = getLastInitial(c);
+      if (letter !== lastLetter) {
+        html += '<div class="letter-divider" data-letter="' + letter + '">' + letter + '</div>';
+        lastLetter = letter;
+      }
+      html += '<div class="camper-check-item" onclick="toggleCheckItem(this,\'in\')" data-name="' + c.replace(/"/g,'&quot;') + '"><div class="camper-checkbox">✓</div><div class="camper-check-name">' + c + '</div></div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+    buildAlphaBar(campers, 'alpha-bar-in', 'camper-checklist', 'in');
   }
 
   function renderCamperCheckoutChecklist() {
@@ -1118,16 +1423,23 @@
     if (!el) return;
     if (!campers.length) {
       el.innerHTML = '<div class="no-campers-msg">No campers loaded yet. Please see a staff member.</div>';
+      const bar = document.getElementById('alpha-bar-out');
+      if (bar) bar.innerHTML = '';
       return;
     }
-    el.innerHTML = '<div class="camper-checklist">' +
-      campers.map(c =>
-        '<div class="camper-check-item checkout-tile" onclick="toggleCheckItem(this,\'out\')" data-name="' + c.replace(/"/g,'&quot;') + '">' +
-          '<div class="camper-checkbox">✓</div>' +
-          '<div class="camper-check-name">' + c + '</div>' +
-        '</div>'
-      ).join('') +
-    '</div>';
+    let html = '<div class="camper-checklist">';
+    let lastLetter = '';
+    campers.forEach(c => {
+      const letter = getLastInitial(c);
+      if (letter !== lastLetter) {
+        html += '<div class="letter-divider" data-letter="' + letter + '">' + letter + '</div>';
+        lastLetter = letter;
+      }
+      html += '<div class="camper-check-item checkout-tile" onclick="toggleCheckItem(this,\'out\')" data-name="' + c.replace(/"/g,'&quot;') + '"><div class="camper-checkbox">✓</div><div class="camper-check-name">' + c + '</div></div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+    buildAlphaBar(campers, 'alpha-bar-out', 'camper-checkout-checklist', 'out');
   }
 
   window.toggleCheckItem = function(el, mode) {
@@ -1167,6 +1479,281 @@
     a.href = URL.createObjectURL(new Blob([[headers.join(','),...rows].join('\n')],{type:'text/csv'}));
     a.download = 'ssdc-log-' + new Date().toISOString().slice(0,10) + '.csv';
     a.click();
+  };
+
+  // ── Pickup sub-tabs ───────────────────────────────────────────────────────
+
+  window.showPickupTab = function(tab) {
+    pickupTab = tab;
+    ['import','manage','qr'].forEach(t => {
+      document.getElementById('pickup-' + t).classList.toggle('hidden', t !== tab);
+    });
+    ['import','manage','qr'].forEach(t => {
+      const el = document.getElementById('pickup-tab-' + t);
+      if (el) el.classList.toggle('active', t === tab);
+    });
+    if (tab === 'manage') renderPickupManage();
+    if (tab === 'qr') renderQRList();
+  };
+
+  // ── Pickup Import ─────────────────────────────────────────────────────────
+
+  window.previewPickupImport = function() {
+    const text = document.getElementById('pickup-paste').value.trim();
+    if (!text) return;
+    const camperCol = parseInt(document.getElementById('pickup-camper-col').value) - 1;
+    const pickupCol = parseInt(document.getElementById('pickup-pickup-col').value) - 1;
+    const lines = text.split('\n').filter(l => l.trim());
+    const parsed = [];
+    const skipped = [];
+    lines.forEach((line, idx) => {
+      if (idx === 0 && (line.toLowerCase().includes('name') || line.toLowerCase().includes('participant'))) return;
+      const cols = line.split(',').map(c => c.trim());
+      const camperName = cols[camperCol];
+      const pickupRaw = cols[pickupCol];
+      if (!camperName) return;
+      const pickupNames = pickupRaw ? pickupRaw.split(';').map(p => p.trim()).filter(Boolean) : [];
+      if (pickupNames.length) { parsed.push({ camper: camperName, pickupNames }); }
+      else { skipped.push(camperName); }
+    });
+    const el = document.getElementById('pickup-preview');
+    if (!parsed.length) { el.innerHTML = '<div class="empty">No valid data found. Check your column numbers.</div>'; return; }
+    let html = '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">Preview (' + parsed.length + ' campers):</div>';
+    html += '<div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;">';
+    parsed.forEach(p => {
+      html += '<div style="padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;"><div style="font-weight:700;color:var(--text)">' + p.camper + '</div><div style="color:var(--text-muted)">' + p.pickupNames.join(', ') + '</div></div>';
+    });
+    html += '</div>';
+    if (skipped.length) html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">⚠️ Skipped (no pickups listed): ' + skipped.join(', ') + '</div>';
+    html += '<button class="admin-btn" onclick="confirmPickupImport()">Confirm &amp; Save</button>';
+    el.innerHTML = html;
+    el._parsed = parsed;
+  };
+
+  window.confirmPickupImport = function() {
+    const el = document.getElementById('pickup-preview');
+    const parsed = el._parsed;
+    if (!parsed) return;
+    const personMap = {};
+    parsed.forEach(({ camper, pickupNames }) => {
+      pickupNames.forEach(name => {
+        const key = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        if (!personMap[key]) personMap[key] = { id: key, name, authorizedCampers: [], qrId: 'SSDC-' + key + '-' + Date.now() };
+        if (!personMap[key].authorizedCampers.includes(camper)) personMap[key].authorizedCampers.push(camper);
+      });
+    });
+    Object.entries(personMap).forEach(([key, val]) => {
+      if (!pickups[key]) pickups[key] = val;
+      else val.authorizedCampers.forEach(c => { if (!pickups[key].authorizedCampers.includes(c)) pickups[key].authorizedCampers.push(c); });
+    });
+    set(ref(db, 'pickups'), pickups);
+    el.innerHTML = '<div style="color:var(--green-dark);font-weight:700;font-size:13px;">✓ Saved ' + Object.keys(personMap).length + ' pickup people!</div>';
+    setSaveIndicator('Pickups saved ✓');
+  };
+
+  // ── Pickup Manage ─────────────────────────────────────────────────────────
+
+  window.renderPickupManage = function() {
+    const search = (document.getElementById('pickup-search') || {}).value || '';
+    const el = document.getElementById('pickup-manage-list');
+    if (!el) return;
+    const keys = Object.keys(pickups).filter(k => !search || pickups[k].name.toLowerCase().includes(search.toLowerCase()));
+    if (!keys.length) { el.innerHTML = '<div class="empty">No pickup people found.</div>'; return; }
+    el.innerHTML = keys.sort((a,b) => pickups[a].name.localeCompare(pickups[b].name)).map(k => {
+      const p = pickups[k];
+      return '<div class="pickup-person-row"><div style="flex:1"><div class="pickup-person-name">' + p.name + '</div><div class="pickup-person-campers">' + (p.authorizedCampers||[]).join(', ') + '</div></div><button class="admin-btn" style="font-size:11px;padding:5px 8px;" onclick="removePickupPerson(\'' + k + '\')">Remove</button></div>';
+    }).join('');
+  };
+
+  window.showAddPickupForm = function() { document.getElementById('pickup-add-form').classList.remove('hidden'); };
+
+  window.saveNewPickup = function() {
+    const name = document.getElementById('new-pickup-name').value.trim();
+    const campersRaw = document.getElementById('new-pickup-campers').value.trim();
+    if (!name) { alert('Please enter a name.'); return; }
+    const key = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const authorizedCampers = campersRaw ? campersRaw.split(',').map(c => c.trim()).filter(Boolean) : [];
+    pickups[key] = { id: key, name, authorizedCampers, qrId: 'SSDC-' + key + '-' + Date.now() };
+    set(ref(db, 'pickups'), pickups);
+    document.getElementById('new-pickup-name').value = '';
+    document.getElementById('new-pickup-campers').value = '';
+    document.getElementById('pickup-add-form').classList.add('hidden');
+    setSaveIndicator('Saved ✓');
+  };
+
+  window.removePickupPerson = function(key) {
+    if (!confirm('Remove ' + pickups[key].name + '?')) return;
+    delete pickups[key];
+    set(ref(db, 'pickups'), pickups);
+  };
+
+  // ── QR Code Generation ────────────────────────────────────────────────────
+
+  window.renderQRList = function() {
+    const search = (document.getElementById('qr-search') || {}).value || '';
+    const el = document.getElementById('qr-person-list');
+    if (!el) return;
+    const keys = Object.keys(pickups).filter(k => !search || pickups[k].name.toLowerCase().includes(search.toLowerCase()));
+    if (!keys.length) { el.innerHTML = '<div class="empty">No pickup people found.</div>'; return; }
+    el.innerHTML = keys.sort((a,b) => pickups[a].name.localeCompare(pickups[b].name)).map(k => {
+      const p = pickups[k];
+      return '<div class="pickup-person-row" id="qr-row-' + k + '"><div class="qr-checkbox" id="qr-chk-' + k + '" onclick="toggleQRSelect(\'' + k + '\')"></div><div style="flex:1;cursor:pointer;" onclick="toggleQRSelect(\'' + k + '\')"><div class="pickup-person-name">' + p.name + '</div><div class="pickup-person-campers">' + (p.authorizedCampers||[]).join(', ') + '</div></div><button class="admin-btn" style="font-size:11px;padding:5px 8px;" onclick="previewSingleQR(\'' + k + '\')">Preview</button></div>';
+    }).join('');
+  };
+
+  window.toggleQRSelect = function(key) {
+    const chk = document.getElementById('qr-chk-' + key);
+    if (!chk) return;
+    chk.classList.toggle('checked');
+    chk.textContent = chk.classList.contains('checked') ? '✓' : '';
+    const anyChecked = document.querySelectorAll('.qr-checkbox.checked').length > 0;
+    document.getElementById('qr-actions').classList.toggle('hidden', !anyChecked);
+  };
+
+  function getSelectedPickupKeys() {
+    return [...document.querySelectorAll('.qr-checkbox.checked')].map(el => el.id.replace('qr-chk-', ''));
+  }
+
+  function generateQRDataURL(text, size) {
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=' + size + 'x' + size + '&data=' + encodeURIComponent(text);
+  }
+
+  window.previewSingleQR = function(key) {
+    const p = pickups[key];
+    if (!p) return;
+    const win = window.open('', '_blank');
+    win.document.write('<html><head><title>QR - ' + p.name + '</title></head><body style="font-family:sans-serif;text-align:center;padding:20px;"><h2>' + p.name + '</h2><img src="' + generateQRDataURL(p.qrId, 250) + '" style="margin:10px auto;display:block;" /><p style="color:#666;font-size:13px;">Authorized for: ' + (p.authorizedCampers||[]).join(', ') + '</p><p style="color:#999;font-size:11px;">Sussex Summer Day Camp</p></body></html>');
+    win.document.close();
+  };
+
+  window.printQRCodes = function() {
+    const keys = getSelectedPickupKeys();
+    if (!keys.length) return;
+    const win = window.open('', '_blank');
+    win.document.write('<html><head><title>QR Codes - Sussex Summer Day Camp</title><style>body{font-family:sans-serif;} .card{display:inline-block;border:1px solid #ccc;border-radius:8px;padding:16px;margin:8px;text-align:center;width:220px;vertical-align:top;page-break-inside:avoid;} h3{margin:0 0 8px;font-size:15px;} p{color:#666;font-size:11px;margin:4px 0;} @media print{.no-print{display:none}}</style></head><body>');
+    win.document.write('<div class="no-print" style="padding:10px;"><button onclick="window.print()">🖨️ Print</button></div>');
+    keys.forEach(k => {
+      const p = pickups[k];
+      if (!p) return;
+      win.document.write('<div class="card"><h3>' + p.name + '</h3><img src="' + generateQRDataURL(p.qrId, 180) + '" width="180" height="180" /><p>Authorized for:<br>' + (p.authorizedCampers||[]).join(', ') + '</p><p style="color:#999;font-size:10px;">Sussex Summer Day Camp</p></div>');
+    });
+    win.document.write('</body></html>');
+    win.document.close();
+  };
+
+  window.emailQRCode = function() { document.getElementById('qr-email-form').classList.remove('hidden'); };
+
+  window.sendQREmail = function() {
+    const email = document.getElementById('qr-email-addr').value.trim();
+    const keys = getSelectedPickupKeys();
+    if (!email) { alert('Please enter an email address.'); return; }
+    if (!keys.length) { alert('Please select at least one person.'); return; }
+    const p = pickups[keys[0]];
+    const body = 'Hello ' + p.name + ',\n\nHere is your QR code for pick-up at Sussex Summer Day Camp.\n\nYou are authorized to pick up: ' + (p.authorizedCampers||[]).join(', ') + '\n\nYour QR code:\n' + generateQRDataURL(p.qrId, 300) + '\n\nPlease save this to your phone or print it and bring it to pick-up.\n\nThank you,\nSussex Summer Day Camp';
+    window.open('mailto:' + email + '?subject=Your Pick-Up QR Code - Sussex Summer Day Camp&body=' + encodeURIComponent(body));
+    document.getElementById('qr-email-form').classList.add('hidden');
+    document.getElementById('qr-email-addr').value = '';
+  };
+
+  // ── QR Scanning ───────────────────────────────────────────────────────────
+
+  window.startQRScan = function() {
+    document.getElementById('view-main').classList.add('hidden');
+    document.getElementById('view-qr-scan').classList.remove('hidden');
+    if (!window.jsQR) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+      script.onload = startCamera;
+      document.head.appendChild(script);
+    } else { startCamera(); }
+  };
+
+  function startCamera() {
+    const video = document.getElementById('qr-video');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => { video.srcObject = stream; qrScanner = stream; scanFrame(video); })
+      .catch(() => { alert('Camera access denied. Please allow camera access and try again.'); stopQRScan(); });
+  }
+
+  function scanFrame(video) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    function tick() {
+      if (!video.srcObject) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        if (window.jsQR) {
+          const code = window.jsQR(imageData.data, imageData.width, imageData.height);
+          if (code) { handleQRResult(code.data); return; }
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function handleQRResult(qrId) {
+    stopQRScan();
+    const match = Object.values(pickups).find(p => p.qrId === qrId);
+    if (!match) { alert('QR code not recognized. Please check out manually.'); document.getElementById('view-main').classList.remove('hidden'); return; }
+    qrScannedPerson = match;
+    showQRResult(match);
+  }
+
+  function showQRResult(person) {
+    document.getElementById('view-main').classList.add('hidden');
+    document.getElementById('view-qr-result').classList.remove('hidden');
+    document.getElementById('qr-person-name').textContent = person.name;
+    document.getElementById('qr-person-rel').textContent = 'Authorized pickup person';
+    const statusMap = {};
+    log.forEach(e => { statusMap[e.camper] = { type: e.type }; });
+    const here = (person.authorizedCampers||[]).filter(c => statusMap[c] && statusMap[c].type === 'in');
+    const notHere = (person.authorizedCampers||[]).filter(c => !statusMap[c] || statusMap[c].type !== 'in');
+    let html = '';
+    if (here.length) {
+      html += '<div style="font-size:13px;color:var(--green-dark);font-weight:600;margin-bottom:6px;">Checked in today — tap to select:</div>';
+      here.forEach(c => {
+        html += '<div class="qr-authorized-item" onclick="this.classList.toggle(\'selected\');var cb=this.querySelector(\'.camper-checkbox\');cb.classList.toggle(\'checked\');cb.textContent=cb.classList.contains(\'checked\')?\'✓\':\'\'" data-camper="' + c + '"><div class="camper-checkbox"></div><div style="font-family:\'Nunito\',sans-serif;font-size:17px;font-weight:600;">' + c + '</div></div>';
+      });
+    }
+    if (notHere.length) {
+      html += '<div style="font-size:12px;color:var(--text-muted);margin-top:8px;margin-bottom:4px;">Not checked in today:</div>';
+      notHere.forEach(c => { html += '<div style="padding:8px 12px;border-radius:var(--radius-sm);background:var(--bg);color:var(--text-muted);font-size:15px;margin-bottom:6px;">' + c + '</div>'; });
+    }
+    if (!here.length && !notHere.length) html = '<div class="empty">No authorized campers found.</div>';
+    document.getElementById('qr-authorized-list').innerHTML = html;
+  }
+
+  window.stopQRScan = function() {
+    if (qrScanner) { qrScanner.getTracks().forEach(t => t.stop()); qrScanner = null; }
+    const video = document.getElementById('qr-video');
+    video.srcObject = null;
+    document.getElementById('view-qr-scan').classList.add('hidden');
+    document.getElementById('view-main').classList.remove('hidden');
+  };
+
+  window.submitQRCheckout = function() {
+    if (!qrScannedPerson) return;
+    const selected = [...document.querySelectorAll('.qr-authorized-item.selected')].map(el => el.dataset.camper);
+    if (!selected.length) { alert('Please select at least one camper to check out.'); return; }
+    const rel = document.getElementById('qr-pickup-rel').value;
+    const now = new Date();
+    const time = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const date = now.toLocaleDateString();
+    const timestamp = now.getTime();
+    selected.forEach(camper => { pushLogEntry({ date, time, timestamp, type:'out', camper, person: qrScannedPerson.name, rel, notes:'QR verified', bus: false }); });
+    document.getElementById('view-qr-result').classList.add('hidden');
+    document.getElementById('success-bus').classList.add('hidden');
+    showSuccess('out', selected, 'Picked up by ' + qrScannedPerson.name + ' at ' + time);
+    qrScannedPerson = null;
+  };
+
+  window.cancelQRResult = function() {
+    document.getElementById('view-qr-result').classList.add('hidden');
+    document.getElementById('view-main').classList.remove('hidden');
+    qrScannedPerson = null;
   };
 
   // ── Daily reset at 5:30 PM ────────────────────────────────────────────────
